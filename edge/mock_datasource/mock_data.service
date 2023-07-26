@@ -1,0 +1,12 @@
+[Unit]
+Description=Mock data source for OpenMachineMonitoring
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python3 -u </path/to/script.py>
+User=<RPI_USER>
+Restart=always
+ 
+[Install]
+WantedBy=multi-user.target
