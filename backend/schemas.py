@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with OpenMachineMonitoring. If not, see <https://www.gnu.org/licenses/>
 '''
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, Dict
 from datetime import datetime
 
@@ -43,10 +43,10 @@ class UsageRecordCreate(UsageRecordBase):
     pass
 
 class UsageRecordUpdate(BaseModel):
-    time_on: Optional[float]
-    time_off: Optional[float]
-    time_idle: Optional[float]
-    date: Optional[datetime]
+    time_on: Optional[float] = Field(None)
+    time_off: Optional[float] = Field(None)
+    time_idle: Optional[float] = Field(None)
+    date: Optional[datetime] = Field(None)
 
 class UsageRecord(UsageRecordBase):
     id: int
@@ -69,11 +69,11 @@ class AssetCreate(AssetBase):
     pass
 
 class AssetUpdate(BaseModel):
-    manufacturer: Optional[str]
-    model: Optional[str]
-    topic: Optional[str]
-    status: Optional[str]
-    usage_data: Optional[Dict[str, float]]
+    manufacturer: Optional[str] = Field(None)
+    model: Optional[str] = Field(None)
+    topic: Optional[str] = Field(None)
+    status: Optional[str] = Field(None)
+    usage_data: Optional[Dict[str, float]] = Field(None)
 
 class Asset(AssetBase):
     id: int
@@ -93,8 +93,8 @@ class Settings(BaseModel):
     week_start: str
 
 class SettingsUpdate(BaseModel):
-    day_duration: Optional[float]
-    week_start: Optional[str]
+    day_duration: Optional[float] = Field(None)
+    week_start: Optional[str] = Field(None)
 
 '''
 USERS
