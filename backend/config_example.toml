@@ -1,0 +1,14 @@
+# Config for OpenMachineMonitoring backend
+
+api_version = "1.0.0"
+TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+
+[influxdb]
+TOKEN = "YOUR INFLUXDB TOKEN"
+bucket = "YOUR INFLUXDB BUCKET"
+URL = "YOUR INFLUXDB URL"
+ORG = "YOUR INFLUXDB ORG"
+
+[current]
+OFF = 0.5
+ON = 1.5
