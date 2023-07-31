@@ -1,0 +1,12 @@
+[Unit]
+Description=Start data ingestion with Telegraf service
+After=network.target
+
+[Service]
+Type=simple
+User=<YOUR RASPBERRY PI USER>
+Environment=INFLUX_TOKEN=<YOUR INFLUX TOKEN>
+ExecStart=telegraf --config <YOUR INFLUXDB URL>
+
+[Install]
+WantedBy=multi-user.target
