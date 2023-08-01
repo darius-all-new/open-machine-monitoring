@@ -4,6 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
+User=<YOUR RASPBERRY PI USER>
 WorkingDirectory=/path/to/your/frontend/
 ExecStart=npm run dev -- --host
 Restart=always
