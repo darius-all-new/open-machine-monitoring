@@ -12,19 +12,27 @@ First clone the OpenMachineMonitoring repo onto your Raspberry Pi.
 
 ### Backend
 
-#### 1. Configuration file
+#### 1. Install Python modules
+
+Navigate to the `backend` folder and run:
+
+`pip install -r requirements.txt`
+
+Make sure you are using the correct pip for your Python environment.
+
+#### 2. Configuration file
 
 Rename `config_example.toml` to `config.toml`
 
 Replace the InfluxDB placeholders with real values. You will need the details from your InfluxDB account (token, bucket, URL and organisation)
 
-#### 2. Add the Raspberry Pi to the permitted origins
+#### 3. Add the Raspberry Pi to the permitted origins
 
 Open `main.py` and add the following line to the `origins` array:
 
 `"http://<YOUR RASPBERRY PI'S NETWORK ADDRESS>:5173"`
 
-#### 3. Run the backend
+#### 4. Run the backend
 
 We are now ready to run OpenMachineMonitoring's backend!
 
@@ -38,7 +46,7 @@ This will startup the backend and make it available on your network. You can che
 
 You should see the documentation page of the OpenMachineMonitoring API.
 
-#### 4. Configure the service (if you want the backend to run automatically)
+#### 5. Configure the service (if you want the backend to run automatically)
 
 To run the backend on the Raspberry Pi automatically there is a backend service script.
 
@@ -62,7 +70,13 @@ That's it. If you restart the Raspberry Pi the backend should come back up (you 
 
 ### Frontend
 
-#### 1. Change the host
+#### 1. Install modules
+
+Navigate to the `frontend` folder and install the necessary node modules:
+
+`npm install`
+
+#### 2. Change the host
 
 Open up `frontend/src/functions.ts` and change the `BASE_URL` to match the Raspberry Pi's local address:
 
@@ -70,7 +84,7 @@ Open up `frontend/src/functions.ts` and change the `BASE_URL` to match the Raspb
 
 Note: At the moment, you will also need to make this change to line 284 in `/frontend/src/components/TimeBarPanel.tsx`.
 
-#### 2. Run the frontend
+#### 3. Run the frontend
 
 Navigate to the `/frontend` folder and run the following:
 
@@ -82,7 +96,7 @@ This will startup the frontend and make it available on your network. Open a bro
 
 You should see the OpenMachineMonitoring frontend!
 
-#### 3. Configure the service (if you want the frontend to run automatically)
+#### 4. Configure the service (if you want the frontend to run automatically)
 
 To run the frontend on the Raspberry Pi automatically there is a frontend service script.
 
