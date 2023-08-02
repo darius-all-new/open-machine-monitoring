@@ -8,7 +8,14 @@ OpenMachineMonitoring is an open-source tool for keeping track of machine activi
 
 You can run OpenMachineMonitoring on a Raspberry Pi.
 
-First clone the OpenMachineMonitoring repo onto your Raspberry Pi.
+### Prerequisites:
+
+- The OpenMachineMonitoring repo cloned onto your Raspberry Pi
+- An InfluxDB account (for storing electrical current data)
+- A Telegraf agent configured on your InfluxDB account
+- Telegraf installed on your Raspberry Pi ([Telegraf installation](https://portal.influxdata.com/downloads/))
+- A HiveMQ account (for MQTT)
+- Either the mock data source (see `edge/mock_datasource`) or some real current sensor operating and publishing data to your MQTT server
 
 ### Backend
 
@@ -100,7 +107,7 @@ You should see the OpenMachineMonitoring frontend!
 
 To run the frontend on the Raspberry Pi automatically there is a frontend service script.
 
-Navigate to the `services` folder and move `omm_frontend_example.service` to `/etc/systemd/system` folder. Rename the service to `omm_frontend.service` or anything else you want.
+Navigate to the `services` folder and move `omm_frontend_example.service` to the `/etc/systemd/system` folder. Rename the service to `omm_frontend.service` or anything else you want.
 
 Make the necessary changes to the placeholders in the service script:
 
@@ -115,6 +122,27 @@ Next, enable and start the service:
 `sudo systemctl enable omm_frontend.service`
 
 `sudo systemctl start omm_frontend.service`
+
+### Telegraf Service
+
+OpenMachineMonitoring ingests data from MQTT messages via a Telegraf agent. The agent channels messages from an MQTT broker to an InfluxDB database in the cloud.
+
+Navigate to the `services` folder and move `telegraf_startup_example.service` to the `/etc/systemd/system` folder. Rename the service to `telegraf_startup.service` or anything else you want.
+
+Make the necessary changes to the placeholders in the service script:
+
+- Add the correct user
+- Add your Influx token (taken from your InfluxDB account)
+- Add the correct Telegraf URL (obtained from your InfluxDB console under Load Data -> Telegraf and clicking on "Setup Instructions" under your Telegraf agent)
+- Make sure the path to `telegraf` is correct (type `which telegraf` to get the path to your telegraf)
+
+Next, enable and start the service:
+
+`sudo systemctl daemon-reload`
+
+`sudo systemctl enable telegraf_startup.service`
+
+`sudo systemctl start telegraf_startup.service`
 
 ### Daily Usage Calculation
 
