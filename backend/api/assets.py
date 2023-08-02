@@ -56,13 +56,12 @@ async def update_asset(asset_id: int, updated_asset: schemas.AssetUpdate, db: Se
 
     return (crud.update_asset(asset_id=asset_id, db=db, asset=updated_asset))
 
-@router.post("/create-usage-record", tags=["Assets"], response_model=List[schemas.UsageRecord])
-def create_usage_record(db: Session=Depends(get_db)):
+@router.post("/create-usage-records", tags=["Assets"], response_model=List[schemas.UsageRecord])
+def create_usage_records(db: Session=Depends(get_db)):
     '''
-    Add a new usage record to the specified asset. A usage record contains information on how long the asset had each status (on/off/idle)
+    Add a new usage record to each connected asset. A usage record contains information on how long the asset had each status (on/off/idle)
     '''
     all_assets = crud.get_assets(db)
-    # asset = crud.get_asset(db=db, asset_id=asset_id)
     start_time_yesterday, end_time_yesterday = get_timestamps_for_yesterday()
 
     usage_records = []
