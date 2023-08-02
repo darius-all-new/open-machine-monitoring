@@ -1,6 +1,6 @@
 # Config for OpenMachineMonitoring backend
 
-api_version = "1.0.0"
+api_version = "0.1.0"
 TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 [influxdb]
