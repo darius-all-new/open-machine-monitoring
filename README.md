@@ -2,7 +2,7 @@
 
 ![OpenMachineMonitoring logo](assets/OMM_Logo_2xPNG%402x.png)
 
-[Link to the OpenMachineMonitoring Blog](openmachinemonitoring.substack.com)
+[Link to the OpenMachineMonitoring Blog](https://openmachinemonitoring.substack.com/)
 
 OpenMachineMonitoring is an open-source tool for keeping track of machine activity in manufacturing facilities.
 
