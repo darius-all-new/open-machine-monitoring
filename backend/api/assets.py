@@ -56,24 +56,32 @@ async def update_asset(asset_id: int, updated_asset: schemas.AssetUpdate, db: Se
 
     return (crud.update_asset(asset_id=asset_id, db=db, asset=updated_asset))
 
-@router.post("/create-usage-record", tags=["Assets"], response_model=schemas.UsageRecord)
-def create_usage_record(asset_id: int, db: Session=Depends(get_db)):
+@router.post("/create-usage-record", tags=["Assets"], response_model=List[schemas.UsageRecord])
+def create_usage_record(db: Session=Depends(get_db)):
     '''
     Add a new usage record to the specified asset. A usage record contains information on how long the asset had each status (on/off/idle)
     '''
-    asset = crud.get_asset(db=db, asset_id=asset_id)
+    all_assets = crud.get_assets(db)
+    # asset = crud.get_asset(db=db, asset_id=asset_id)
     start_time_yesterday, end_time_yesterday = get_timestamps_for_yesterday()
 
-    yesterday_data = get_data_over_time_period(asset.topic, start_time_yesterday, end_time_yesterday)
+    usage_records = []
 
-    usage_data = calculate_duration(yesterday_data)
+    for asset in all_assets:
+        yesterday_data = get_data_over_time_period(asset.topic, start_time_yesterday, end_time_yesterday)
 
-    current_datetime = datetime.datetime.now()
-    yesterday_datetime = current_datetime - datetime.timedelta(days=1)
+        usage_data = calculate_duration(yesterday_data)
 
-    usage_data["date"] = yesterday_datetime
+        current_datetime = datetime.datetime.now()
+        yesterday_datetime = current_datetime - datetime.timedelta(days=1)
 
-    return crud.create_usage_record(db=db, asset_id=asset_id, usage_record=usage_data)
+        usage_data["date"] = yesterday_datetime
+
+        usage_record = crud.create_usage_record(db=db, asset_id=asset.id, usage_record=usage_data)
+
+        usage_records.append(usage_record)
+
+    return usage_records
 
 @router.get("/usage-records-for-asset", tags=["Assets"], response_model=List[schemas.UsageRecord])
 def get_usage_records_for_asset(asset_id: int, days: int, db: Session=Depends(get_db)):
