@@ -18,7 +18,7 @@ Navigate to the `backend` folder and run:
 
 `pip install -r requirements.txt`
 
-Make sure you are using the correct pip for your Python environment.
+Make sure you are using the correct pip for your Python version/environment.
 
 #### 2. Configuration file
 
@@ -115,5 +115,25 @@ Next, enable and start the service:
 `sudo systemctl enable omm_frontend.service`
 
 `sudo systemctl start omm_frontend.service`
+
+### Daily Usage Calculation
+
+To calculate the usage for the previous day we can set up a cron job that will run a shell script every morning at 09:00.
+
+The shell script is located at `cronjobs/calc_yesterdays_usage.sh`
+
+Inside the script make sure to fill out the placeholder with your Raspberry Pi's network address:
+
+`curl -X POST http://<YOUR RASPBERRY PI NETWORK ADDR>:8000/create-usage-records`
+
+You will also need to change the permissions on the shell script so that it can be executed:
+
+`chmod +x /path/to/repo/cronjobs/calc_yesterdays_usage.sh`
+
+With that done, all we need to do is open the crontab (`crontab -e`) and add the following line to the bottom of the file:
+
+`0 9 * * * /path/to/repo/cronjobs/calc_yesterdays_usage.sh >> /path_to_repo/cronjobs/cron_log.txt 2>&1`
+
+### Questions, feedback, problems
 
 If you have any issues or questions, don't hesitate to reach out!
