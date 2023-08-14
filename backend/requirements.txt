@@ -1,3 +1,5 @@
 toml
 fastapi
+uvicorn
 sqlalchemy
+influxdb-client

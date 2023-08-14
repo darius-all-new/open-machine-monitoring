@@ -47,7 +47,7 @@ We are now ready to run OpenMachineMonitoring's backend!
 
 Navigate to the `/backend` folder and run the following:
 
-`uvicorn main:app --reload --host 0.0.0.0`
+`python -m uvicorn main:app --reload --host 0.0.0.0`
 
 This will startup the backend and make it available on your network. You can check this with another computer (connected to the same network) by opening a browser and navigating to the following:
 
