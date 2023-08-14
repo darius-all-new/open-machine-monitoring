@@ -84,7 +84,21 @@ def get_usage_records_for_all_assets(db: Session, days: int):
 
 
 def get_settings(db: Session, settings_id: int):
-    return db.query(models.Settings).filter(models.Settings.id == 1).first()
+    settings = db.query(models.Settings).filter(models.Settings.id == 1).first()
+    
+    if settings:
+        return settings
+    else:
+        settings = create_settings(db)
+        return settings
+
+def create_settings(db: Session):
+    db_settings = models.Settings(day_duration=24, week_start="Monday")
+    db.add(db_settings)
+    db.commit()
+    db.refresh(db_settings)
+
+    return db_settings
 
 def change_settings(db: Session, id: int, settings: schemas.SettingsUpdate):
     existing_settings = db.query(models.Settings).filter(models.Settings.id == 1).first()
