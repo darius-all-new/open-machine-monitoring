@@ -14,7 +14,7 @@ You can run OpenMachineMonitoring on a Raspberry Pi.
 
 - The OpenMachineMonitoring repo cloned onto your Raspberry Pi
 - An InfluxDB account (for storing electrical current data)
-- A Telegraf agent configured on your InfluxDB account
+- A Telegraf agent configured on your InfluxDB account (you will need an MQTT consumer configured with the correct MQTT connection parameters and topic subscriptions)
 - Telegraf installed on your Raspberry Pi ([Telegraf installation](https://portal.influxdata.com/downloads/))
 - A HiveMQ account (for MQTT)
 - Either the mock data source (see `edge/mock_datasource`) or some real current sensor operating and publishing data to your MQTT server
@@ -27,7 +27,7 @@ Navigate to the `backend` folder and run:
 
 `pip install -r requirements.txt`
 
-Make sure you are using the correct pip for your Python version/environment.
+Make sure you are using the correct pip for your Python version/environment. It is advisable to use a virtual environment to keep everything tidy.
 
 #### 2. Configuration file
 
@@ -65,7 +65,7 @@ Make the necessary changes to the placeholders in the service script:
 
 - Add the correct working directory (`pwd` when in the `backend` folder on the Pi)
 - Add the correct user
-- Make sure the path to `uvicorn` is correct
+- Make sure the path to `uvicorn` is correct (if you are using a venv it should be `path/to/your/venv/bin/uvicorn`)
 
 Next, enable and start the service:
 
@@ -115,7 +115,6 @@ Make the necessary changes to the placeholders in the service script:
 
 - Add the correct working directory (`pwd` when in the `frontend` folder on the Pi)
 - Add the correct user
-- Make sure the path to `npm` is correct
 
 Next, enable and start the service:
 
