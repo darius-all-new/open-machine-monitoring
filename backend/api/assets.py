@@ -96,5 +96,5 @@ async def start_updating_statuses(background_tasks: BackgroundTasks, db: Session
     This updates the latest status of the machine (on, off or idle)
     '''
     all_assets = crud.get_assets(db)
-    background_tasks.add_task(update_latest_status, all_assets, db)
+    background_tasks.add_task(update_latest_status, all_assets)
     return({"message": "Started status update for all assets"})

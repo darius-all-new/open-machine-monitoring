@@ -88,32 +88,45 @@ def calculate_duration(data):
         "time_on": on_duration.total_seconds()
     }
 
-def calculate_day_metrics(list_of_assets, db):
+def calculate_day_metrics(list_of_assets):
     '''
     Update assets with their usage data for the current day
     '''
 
     for asset in list_of_assets:
-        start_time, end_time = get_formatted_timestamps("day")
-        
-        todays_data_so_far = get_data_over_time_period(asset.topic, start_time=start_time, end_time=end_time)
-        
-        durations = {"usage_data": calculate_duration(todays_data_so_far)}
-        
-        asset_update = schemas.AssetUpdate(**durations)
-        
-        updated_asset = crud.update_asset(asset_id=asset.id, db=db, asset=asset_update)
-        
-def update_latest_status(list_of_assets, db):
+        db = SessionLocal()
+
+        try:
+            start_time, end_time = get_formatted_timestamps("day")
+            
+            todays_data_so_far = get_data_over_time_period(asset.topic, start_time=start_time, end_time=end_time)
+            
+            durations = {"usage_data": calculate_duration(todays_data_so_far)}
+            
+            asset_update = schemas.AssetUpdate(**durations)
+            
+            crud.update_asset(asset_id=asset.id, db=db, asset=asset_update)
+        finally:
+            db.close()
+
+def update_latest_status(list_of_assets):
     '''
     Update each asset with the latest status (on/off/idle)
     '''
 
     for asset in list_of_assets:
-        latest_data = getlatestdata(asset.topic)
-        
-        if (len(latest_data) > 0):
-            print(latest_data[0])
-            update_data = {"status": calculate_status(latest_data[0]["current"])}
-            update_data = schemas.AssetUpdate(**update_data)
-            updated_asset = crud.update_asset(asset_id=asset.id, db=db, asset=update_data)
+        db = SessionLocal()
+
+        try:
+
+            latest_data = getlatestdata(asset.topic)
+            
+            if (len(latest_data) > 0):
+                print(latest_data[0])
+                update_data = {"status": calculate_status(latest_data[0]["current"])}
+                update_data = schemas.AssetUpdate(**update_data)
+                crud.update_asset(asset_id=asset.id, db=db, asset=update_data)
+        except Exception as e:
+            print(f"Error updating asset {asset.id}: {e}")
+        finally:
+            db.close()

@@ -32,5 +32,5 @@ async def start_calculating_day_metrics(background_tasks: BackgroundTasks, db: S
     This calculates the uptime/downtime and idle time for the day so far for each asset and updates those metrics in the database.
     '''
     all_assets = crud.get_assets(db)
-    background_tasks.add_task(calculate_day_metrics, all_assets, db)
+    background_tasks.add_task(calculate_day_metrics, all_assets)
     return({"message": "Started calculation for the current day"})
