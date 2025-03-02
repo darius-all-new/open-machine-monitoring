@@ -120,6 +120,8 @@ const TimeBarPanel = (props: Props) => {
         // Process into time ranges
         const ranges: Range[] = [];
         let currentRange: Range | null = null;
+        let lastPointTime: Date | null = null;
+        const GAP_THRESHOLD = 5 * 60 * 1000; // 5 minutes in milliseconds
 
         for (const point of processedPoints) {
           const pointTime = new Date(point.time);
@@ -130,7 +132,34 @@ const TimeBarPanel = (props: Props) => {
             continue;
           }
 
-          if (!currentRange) {
+          // Check for gaps in data
+          if (lastPointTime && (pointTime.getTime() - lastPointTime.getTime() > GAP_THRESHOLD)) {
+            // If we have a current range, close it
+            if (currentRange) {
+              currentRange.time_end = lastPointTime.toISOString();
+              currentRange.duration = lastPointTime.getTime() - new Date(currentRange.time_begin).getTime();
+              currentRange.text = `${new Date(currentRange.time_begin).toLocaleTimeString()} - ${lastPointTime.toLocaleTimeString()}`;
+              ranges.push(currentRange);
+            }
+
+            // Add a "Down" range for the gap
+            ranges.push({
+              time_begin: lastPointTime.toISOString(),
+              time_end: pointTime.toISOString(),
+              status: "Down",
+              duration: pointTime.getTime() - lastPointTime.getTime(),
+              text: `Gap: ${lastPointTime.toLocaleTimeString()} - ${pointTime.toLocaleTimeString()}`
+            });
+
+            // Start a new range with current point
+            currentRange = {
+              time_begin: point.time,
+              time_end: point.time,
+              status: point.status,
+              duration: 0,
+              text: `${new Date(point.time).toLocaleTimeString()} - Present`
+            };
+          } else if (!currentRange) {
             currentRange = {
               time_begin: point.time,
               time_end: point.time,
@@ -151,6 +180,8 @@ const TimeBarPanel = (props: Props) => {
               text: `${new Date(point.time).toLocaleTimeString()} - Present`
             };
           }
+
+          lastPointTime = pointTime;
         }
 
         if (currentRange && processedPoints.length > 0) {

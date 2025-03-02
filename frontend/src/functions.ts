@@ -35,15 +35,34 @@ type SetDataFunction = React.Dispatch<React.SetStateAction<Data[]>>;
 type SetUsageRecordsFunction = (records: UsageRecord[]) => void;
 
 export const formatTimeToHoursAndMinutes = (durationInSeconds: number) => {
+  // First, round to nearest second to avoid floating point issues
+  durationInSeconds = Math.round(durationInSeconds);
+  
+  // Calculate hours
   const hours = Math.floor(durationInSeconds / 3600);
-  const minutes = Math.floor((durationInSeconds % 3600) / 60);
-  const seconds = durationInSeconds % 60;
+  
+  // Calculate remaining minutes and seconds
+  let minutes = Math.floor((durationInSeconds % 3600) / 60);
+  let seconds = durationInSeconds % 60;
+  
+  // Handle seconds rollover
+  if (seconds === 60) {
+    seconds = 0;
+    minutes += 1;
+  }
+  
+  // Handle minutes rollover
+  if (minutes === 60) {
+    minutes = 0;
+    hours += 1;
+  }
 
-  const formattedTime = `${hours.toFixed(0)}h ${minutes.toFixed(
-    0
-  )}m ${seconds.toFixed(0)}s`;
-  // ${seconds.toFixed(0)}s`;
-  return formattedTime;
+  // Format with leading zeros for consistency
+  const formattedHours = hours.toString();
+  const formattedMinutes = minutes.toString().padStart(2, '0');
+  const formattedSeconds = seconds.toString().padStart(2, '0');
+
+  return `${formattedHours}h ${formattedMinutes}m ${formattedSeconds}s`;
 };
 
 /*
