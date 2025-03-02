@@ -20,7 +20,7 @@ along with OpenMachineMonitoring. If not, see <https://www.gnu.org/licenses/>
 // Configuration for the application environment
 export const config = {
   // Base URL for all API endpoints
-  API_BASE_URL: "http://localhost:8000",
+  API_BASE_URL: "http://<YOUR RASPBERRY PI'S NETWORK ADDRESS>:8000",
 } as const;
 
 // Helper function to construct API URLs

@@ -3,3 +3,4 @@ fastapi
 uvicorn
 sqlalchemy
 influxdb-client
+paho-mqtt

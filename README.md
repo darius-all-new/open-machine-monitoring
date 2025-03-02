@@ -87,11 +87,9 @@ Navigate to the `frontend` folder and install the necessary node modules:
 
 #### 2. Change the host
 
-Open up `frontend/src/functions.ts` and change the `BASE_URL` to match the Raspberry Pi's local address:
+Open up `frontend/src/config.ts` and change the `API_BASE_URL` to match the Raspberry Pi's local address (line 23):
 
-`const BASE_URL = "http://<YOUR RASPBERRY PI'S NETWORK ADDRESS>:8000"`
-
-Note: At the moment, you will also need to make this change to line 284 in `/frontend/src/components/TimeBarPanel.tsx`.
+`const API_BASE_URL = "http://<YOUR RASPBERRY PI'S NETWORK ADDRESS>:8000"`
 
 #### 3. Run the frontend
 
