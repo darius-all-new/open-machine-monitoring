@@ -39,7 +39,7 @@ const ComparisonView = () => {
   return (
     <>
       <NavBar />
-      <Box maxW="1400px" mx="auto" px={5} py={8}>
+      <Box maxW="1400px" mx="auto" px={5} py={8} bg={useColorModeValue("white", "gray.800")}>
         {/* Header Section */}
         <Box mb={8}>
           <Flex align="center" gap={3} mb={2}>

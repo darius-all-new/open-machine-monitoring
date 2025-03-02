@@ -63,42 +63,35 @@ const CHART_COLORS = [
 ] as const;
 
 const ComparisonChart = () => {
+  // Color mode values - moved outside of useMemo
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const gridColor = useColorModeValue("#E2E8F0", "#4A5568");
+  const axisColor = useColorModeValue("#2D3748", "#FFFFFF");
+  const tooltipBgColor = useColorModeValue("white", "gray.700");
+  const tooltipBorderColor = useColorModeValue("gray.200", "gray.600");
+  const checkboxBgColor = useColorModeValue("gray.50", "gray.700");
+  const hoverBgColor = useColorModeValue("gray.100", "gray.600");
+  const textColor = useColorModeValue("gray.600", "gray.300");
+
   const [assets, setAssets] = useState<Asset[]>([]);
   const [selectedAssetIds, setSelectedAssetIds] = useState<number[]>([]);
   const [usageRecords, setUsageRecords] = useState<UsageRecord[]>([]);
   const [filter, setFilter] = useState("");
-  const [comparisonData, setComparisonData] = useState<ComparisonDataPoint[]>(
-    []
-  );
+  const [comparisonData, setComparisonData] = useState<ComparisonDataPoint[]>([]);
 
-  // Memoize initial dates
-  const [startDate, setStartDate] = useState<string>(
-    useMemo(() => {
-      const date = new Date();
-      date.setDate(date.getDate() - 7);
-      return date.toISOString().split("T")[0];
-    }, [])
-  );
+  // Calculate initial dates
+  const initialStartDate = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 7);
+    return date.toISOString().split("T")[0];
+  }, []);
 
-  const [endDate, setEndDate] = useState<string>(
-    useMemo(() => new Date().toISOString().split("T")[0], [])
-  );
+  const initialEndDate = useMemo(() => new Date().toISOString().split("T")[0], []);
 
-  // Memoize color mode values
-  const colors = useMemo(
-    () => ({
-      bgColor: useColorModeValue("white", "gray.800"),
-      borderColor: useColorModeValue("gray.200", "gray.600"),
-      gridColor: useColorModeValue("#E2E8F0", "#4A5568"),
-      axisColor: useColorModeValue("#2D3748", "#FFFFFF"),
-      tooltipBgColor: useColorModeValue("white", "gray.700"),
-      tooltipBorderColor: useColorModeValue("gray.200", "gray.600"),
-      checkboxBgColor: useColorModeValue("gray.50", "gray.700"),
-      hoverBgColor: useColorModeValue("gray.100", "gray.600"),
-      textColor: useColorModeValue("gray.600", "gray.300"),
-    }),
-    []
-  );
+  // Use the memoized dates in useState
+  const [startDate, setStartDate] = useState<string>(initialStartDate);
+  const [endDate, setEndDate] = useState<string>(initialEndDate);
 
   // Memoize filtered assets
   const filteredAssets = useMemo(
@@ -218,12 +211,12 @@ const ComparisonChart = () => {
     if (active && payload && payload.length) {
       return (
         <Box
-          bg={colors.tooltipBgColor}
+          bg={tooltipBgColor}
           p={3}
           borderRadius="md"
           boxShadow="lg"
           border="1px solid"
-          borderColor={colors.tooltipBorderColor}
+          borderColor={tooltipBorderColor}
         >
           <Text fontWeight="medium" mb={2}>
             {new Date(label).toLocaleDateString("en-GB", {
@@ -257,10 +250,10 @@ const ComparisonChart = () => {
 
   return (
     <Box
-      bg={colors.bgColor}
+      bg={bgColor}
       borderRadius="lg"
       border="1px solid"
-      borderColor={colors.borderColor}
+      borderColor={borderColor}
       p={6}
     >
       <Flex direction={{ base: "column", md: "row" }} gap={6}>
@@ -268,7 +261,7 @@ const ComparisonChart = () => {
         <Box width={{ base: "100%", md: "300px" }}>
           {/* Date Range Selector */}
           <Box mb={4}>
-            <Text mb={2} fontSize="sm" color={colors.textColor}>
+            <Text mb={2} fontSize="sm" color={textColor}>
               Start Date
             </Text>
             <Input
@@ -278,7 +271,7 @@ const ComparisonChart = () => {
               max={endDate}
               mb={3}
             />
-            <Text mb={2} fontSize="sm" color={colors.textColor}>
+            <Text mb={2} fontSize="sm" color={textColor}>
               End Date
             </Text>
             <Input
@@ -293,7 +286,7 @@ const ComparisonChart = () => {
           {/* Asset Selection */}
           <Box
             p={4}
-            bg={colors.checkboxBgColor}
+            bg={checkboxBgColor}
             borderRadius="md"
             maxH="500px"
             overflowY="auto"
@@ -320,7 +313,7 @@ const ComparisonChart = () => {
                   onChange={() => handleAssetSelection(asset.id)}
                   p={2}
                   borderRadius="md"
-                  _hover={{ bg: colors.hoverBgColor }}
+                  _hover={{ bg: hoverBgColor }}
                 >
                   <Text fontSize="sm">
                     {asset.manufacturer} {asset.model}
@@ -345,12 +338,12 @@ const ComparisonChart = () => {
                 <LineChart data={comparisonData}>
                   <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke={colors.gridColor}
+                    stroke={gridColor}
                   />
                   <XAxis
                     dataKey="date"
-                    stroke={colors.axisColor}
-                    tick={{ fill: colors.axisColor }}
+                    stroke={axisColor}
+                    tick={{ fill: axisColor }}
                     tickFormatter={(date) =>
                       new Date(date).toLocaleDateString("en-GB", {
                         day: "numeric",
@@ -359,15 +352,15 @@ const ComparisonChart = () => {
                     }
                   />
                   <YAxis
-                    stroke={colors.axisColor}
-                    tick={{ fill: colors.axisColor }}
+                    stroke={axisColor}
+                    tick={{ fill: axisColor }}
                     tickFormatter={(value) => `${value}%`}
                   />
                   <Tooltip
                     content={CustomTooltip}
                     contentStyle={{
-                      backgroundColor: colors.tooltipBgColor,
-                      border: `1px solid ${colors.tooltipBorderColor}`,
+                      backgroundColor: tooltipBgColor,
+                      border: `1px solid ${tooltipBorderColor}`,
                     }}
                   />
                   <Legend />
