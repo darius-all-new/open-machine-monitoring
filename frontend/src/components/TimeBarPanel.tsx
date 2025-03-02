@@ -233,12 +233,16 @@ const TimeBarPanel = (props: Props) => {
     return useColorModeValue(colourScheme.grey, colourScheme.greyDark);
   };
 
+  const MAX_GAP_MS = 5 * 60 * 1000;
+
   const transformData = (data: ProcessedData[]): Range[] => {
     const transformedData: Range[] = [];
-
     let currentRange: Range | null = null;
 
-    for (const point of data) {
+    for (let i = 0; i < data.length; i++) {
+      const point = data[i];
+      const nextPoint = i < data.length - 1 ? data[i + 1] : null;
+
       if (currentRange === null) {
         // Start a new range
         currentRange = {
@@ -247,21 +251,54 @@ const TimeBarPanel = (props: Props) => {
           status: point.status,
           duration: 0,
         };
-      } else if (point.status === currentRange.status) {
-        // Expand the current range
-        currentRange.time_end = point.time;
-      } else {
-        // End the current range and start a new one
-        currentRange.duration =
-          new Date(currentRange.time_end).getTime() -
-          new Date(currentRange.time_begin).getTime();
-        transformedData.push(currentRange);
-        currentRange = {
-          time_begin: point.time,
-          time_end: point.time,
-          status: point.status,
-          duration: 0,
-        };
+      } else if (nextPoint) {
+        // Check for gaps between measurements
+        const currentTime = new Date(point.time).getTime();
+        const nextTime = new Date(nextPoint.time).getTime();
+        const gap = nextTime - currentTime;
+
+        if (gap > MAX_GAP_MS) {
+          // End current range
+          currentRange.time_end = point.time;
+          currentRange.duration =
+            new Date(currentRange.time_end).getTime() -
+            new Date(currentRange.time_begin).getTime();
+          transformedData.push(currentRange);
+
+          // Add a "Down" range for the gap
+          transformedData.push({
+            time_begin: point.time,
+            time_end: nextPoint.time,
+            status: "Down",
+            duration: gap,
+          });
+
+          // Start a new range with the next point
+          currentRange = {
+            time_begin: nextPoint.time,
+            time_end: nextPoint.time,
+            status: nextPoint.status,
+            duration: 0,
+          };
+          continue;
+        }
+
+        if (point.status === currentRange.status) {
+          // Expand the current range
+          currentRange.time_end = point.time;
+        } else {
+          // End the current range and start a new one
+          currentRange.duration =
+            new Date(currentRange.time_end).getTime() -
+            new Date(currentRange.time_begin).getTime();
+          transformedData.push(currentRange);
+          currentRange = {
+            time_begin: point.time,
+            time_end: point.time,
+            status: point.status,
+            duration: 0,
+          };
+        }
       }
     }
 
