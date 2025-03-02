@@ -82,6 +82,46 @@ def get_usage_records_for_all_assets(db: Session, days: int):
     return db.query(models.UsageRecord).filter(func.date(models.UsageRecord.date) >= start_date,
         func.date(models.UsageRecord.date) <= current_date).all()
 
+# Downtime CRUD operations
+def get_downtime(db: Session, downtime_id: int):
+    return db.query(models.Downtime).filter(models.Downtime.id == downtime_id).first()
+
+def get_downtimes(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Downtime).offset(skip).limit(limit).all()
+
+def get_downtimes_by_asset(db: Session, asset_id: int, skip: int = 0, limit: int = 100):
+    return db.query(models.Downtime).filter(models.Downtime.asset_id == asset_id).offset(skip).limit(limit).all()
+
+def create_downtime(db: Session, downtime: schemas.DowntimeCreate):
+    db_downtime = models.Downtime(**downtime.dict())
+    db.add(db_downtime)
+    db.commit()
+    db.refresh(db_downtime)
+    return db_downtime
+
+def update_downtime(db: Session, downtime_id: int, downtime: schemas.DowntimeUpdate):
+    existing_downtime = db.query(models.Downtime).filter(models.Downtime.id == downtime_id).first()
+    
+    if existing_downtime is None:
+        return None
+    
+    for f, v in downtime.__dict__.items():
+        if f != "id" and v is not None:
+            setattr(existing_downtime, f, v)
+    
+    db.commit()
+    db.refresh(existing_downtime)
+    return existing_downtime
+
+def delete_downtime(db: Session, downtime_id: int):
+    existing_downtime = db.query(models.Downtime).filter(models.Downtime.id == downtime_id).first()
+    
+    if existing_downtime is None:
+        return False
+    
+    db.delete(existing_downtime)
+    db.commit()
+    return True
 
 def get_settings(db: Session, settings_id: int):
     settings = db.query(models.Settings).filter(models.Settings.id == 1).first()

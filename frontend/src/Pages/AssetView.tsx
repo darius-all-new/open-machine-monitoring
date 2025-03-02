@@ -23,9 +23,11 @@ import {
   Grid,
   GridItem,
   Heading,
+  Icon,
   Input,
   Text,
   useToast,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import AssetItem from "../components/AssetItem";
@@ -39,6 +41,7 @@ import {
   updateAssetStatuses,
   updateMetrics,
 } from "../functions";
+import { FiBox } from "react-icons/fi";
 
 const AssetView = () => {
   const [filter, setFilter] = useState("");
@@ -149,27 +152,39 @@ const AssetView = () => {
   return (
     <>
       <NavBar />
-      <Box p={5}>
-        <Heading py={3}>Assets</Heading>
-        <Text py={5}>
-          This is the main asset view. Here you can see all connected assets
-          together with some key data for each one. You can also add a new
-          asset.
+      <Box p={5} maxW="1400px" mx="auto">
+        <Heading size="2xl" py={3} display="flex" alignItems="center" gap={4}>
+          Assets
+          <Icon as={FiBox} color={colourScheme.mainButton} boxSize={8} />
+        </Heading>
+        <Text
+          fontSize="lg"
+          color={useColorModeValue("gray.600", "gray.200")}
+          pb={8}
+        >
+          Monitor and manage all your connected assets. View live status and
+          performance metrics for each machine.
         </Text>
         <Grid
           templateColumns={["1fr", "1fr", "3fr 1fr"]}
           gap={4}
           alignItems="center"
+          mb={8}
         >
           <GridItem>
             <Input
-              border="solid 1px"
-              m={0}
+              border="1px solid"
+              borderColor="gray.300"
+              _hover={{ borderColor: "gray.400" }}
+              _focus={{
+                borderColor: colourScheme.mainButton,
+                boxShadow: "0 0 0 1px " + colourScheme.mainButton,
+              }}
               size="lg"
               type="text"
               value={filter}
               onChange={handleFilterChange}
-              placeholder="Filter Assets"
+              placeholder="Search by manufacturer or model..."
             />
           </GridItem>
           <GridItem>
@@ -179,14 +194,36 @@ const AssetView = () => {
               _hover={{
                 color: colourScheme.mainButtonTextHover,
                 bgColor: colourScheme.mainButtonHover,
+                transform: "translateY(-2px)",
+                boxShadow: "lg",
               }}
               size="lg"
               w="full"
               onClick={handleAddNew}
+              transition="all 0.2s"
             >
               Add a new asset
             </Button>
           </GridItem>
+        </Grid>
+
+        <Grid
+          templateColumns={[
+            "1fr",
+            "repeat(2, 1fr)",
+            "repeat(2, 1fr)",
+            "repeat(3, 1fr)",
+          ]}
+          gap={6}
+        >
+          {filteredAssets.map((asset) => (
+            <GridItem key={asset.id}>
+              <AssetItem
+                asset={asset}
+                onDataViewClick={() => handleDataViewClick(asset.id)}
+              />
+            </GridItem>
+          ))}
         </Grid>
 
         <CreateAssetPanel
@@ -207,30 +244,6 @@ const AssetView = () => {
             <Text>{`Couldn't find that asset! ${assetIdOfInterest}`}</Text>
           )
         )}
-      </Box>
-
-      <Box w="100%">
-        <Grid
-          templateColumns={{
-            base: "repeat(1, 1fr)",
-            md: "repeat(3, 1fr)",
-            lg: "repeat(3, 1fr)",
-          }}
-        >
-          {assets ? (
-            filteredAssets.map((item, index) => (
-              <GridItem key={index} p={5}>
-                <AssetItem
-                  key={index}
-                  asset={item}
-                  onDataViewClick={() => handleDataViewClick(item.id)}
-                />
-              </GridItem>
-            ))
-          ) : (
-            <Text>Loading assets</Text>
-          )}
-        </Grid>
       </Box>
     </>
   );

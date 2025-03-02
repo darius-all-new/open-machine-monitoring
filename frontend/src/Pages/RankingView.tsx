@@ -30,13 +30,17 @@ import {
 import {
   Box,
   Button,
-  Container,
   Grid,
   GridItem,
   Heading,
   Text,
+  useColorModeValue,
+  Flex,
+  Icon,
+  Badge,
 } from "@chakra-ui/react";
 import RankingAssetPanel from "../components/RankingAssetPanel";
+import { FiAward, FiArrowUp, FiArrowDown } from "react-icons/fi";
 
 const RankingView = () => {
   const { settings, updateSettings } = useSettings();
@@ -68,6 +72,13 @@ const RankingView = () => {
     currentDate.getDate() - calculateDaysToWeekStart(settings.week_start)
   );
   startOfWeek.setHours(0, 0, 0);
+
+  // Theme colors
+  const bgColor = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const textColor = useColorModeValue("gray.600", "gray.200");
+  const weekStartBgColor = useColorModeValue("blue.50", "blue.900");
+  const assetHoverBorderColor = useColorModeValue("blue.200", "blue.500");
 
   const averageUsageArraySorted = [...averageUsageArray].sort((a, b) => {
     if (bestFirst) {
@@ -121,41 +132,97 @@ const RankingView = () => {
   return (
     <>
       <NavBar />
-      <Box p={5}>
-        <Heading py={3}>Ranked View</Heading>
-        <Text py={5}>
-          This is the ranked view. Here you can see what assets have the most
-          uptime and the least. Rankings are based on the current week.
-        </Text>
-        <Text>Weeks start on: {settings.week_start}</Text>
-      </Box>
+      <Box maxW="1400px" mx="auto" px={5} py={8}>
+        {/* Header Section */}
+        <Box mb={8}>
+          <Flex align="center" gap={3} mb={2}>
+            <Heading
+              size="2xl"
+              py={3}
+              display="flex"
+              alignItems="center"
+              gap={4}
+            >
+              Asset Rankings
+              <Icon as={FiAward} color={colourScheme.mainButton} boxSize={8} />
+            </Heading>
+          </Flex>
+          <Text
+            fontSize="lg"
+            color={useColorModeValue("gray.600", "gray.200")}
+            pb={8}
+          >
+            View and compare asset performance rankings based on uptime. Track
+            which assets are performing best and identify those that may need
+            attention.
+          </Text>
+        </Box>
 
-      <Container>
-        <Button
-          bgColor={colourScheme.mainButton}
-          color={colourScheme.mainButtonText}
-          _hover={{
-            color: colourScheme.mainButtonTextHover,
-            bgColor: colourScheme.mainButtonHover,
-          }}
-          size="lg"
-          w="full"
-          my={3}
-          onClick={switchOrder}
+        {/* Week Info & Sort Section */}
+        <Box
+          p={4}
+          bg={bgColor}
+          borderRadius="lg"
+          border="1px"
+          borderColor={borderColor}
+          mb={6}
         >
-          {bestFirst ? "Sort ascending" : "Sort descending"}
-        </Button>
-        <Grid
-          templateColumns={{
-            base: "repeat(1, 1fr)",
-            md: "repeat(1, 1fr)",
-            lg: "repeat(1, 1fr)",
-          }}
-          gap={4}
-        >
-          {averageUsageArraySorted.map((au, k) => {
-            return (
-              <GridItem mx={0} border="solid 1px" borderRadius="5px" key={k}>
+          <Flex
+            direction={{ base: "column", md: "row" }}
+            justify="space-between"
+            align={{ base: "stretch", md: "center" }}
+            gap={4}
+            mb={6}
+          >
+            {/* Week Start Info */}
+            <Flex
+              align="center"
+              bg={weekStartBgColor}
+              p={3}
+              borderRadius="md"
+              color="blue.600"
+            >
+              <Text fontWeight="medium">
+                Week starts on{" "}
+                <Badge colorScheme="blue" fontSize="sm" px={2}>
+                  {settings.week_start}
+                </Badge>
+              </Text>
+            </Flex>
+
+            {/* Sort Button */}
+            <Button
+              leftIcon={bestFirst ? <FiArrowDown /> : <FiArrowUp />}
+              bgColor={colourScheme.mainButton}
+              color={colourScheme.mainButtonText}
+              _hover={{
+                color: colourScheme.mainButtonTextHover,
+                bgColor: colourScheme.mainButtonHover,
+              }}
+              onClick={switchOrder}
+            >
+              {bestFirst ? "Sort by Lowest Uptime" : "Sort by Highest Uptime"}
+            </Button>
+          </Flex>
+
+          {/* Rankings Grid */}
+          <Grid templateColumns="1fr" gap={4} maxW="800px" mx="auto">
+            {averageUsageArraySorted.map((au, k) => (
+              <GridItem
+                key={k}
+                bg={bgColor}
+                borderRadius="xl"
+                boxShadow="sm"
+                border="1px solid"
+                borderColor={borderColor}
+                overflow="hidden"
+                transition="all 0.2s"
+                _hover={{
+                  transform: "translateY(-2px)",
+                  boxShadow: "lg",
+                  borderColor: assetHoverBorderColor,
+                }}
+              >
                 <RankingAssetPanel
                   asset_id={au.asset_id}
                   average_uptime={au.average_uptime}
@@ -164,13 +231,13 @@ const RankingView = () => {
                       (obj) => obj.asset_id === au.asset_id
                     )?.average_uptime || "unavailable"
                   }
-                  key={k}
+                  rank={k + 1}
                 />
               </GridItem>
-            );
-          })}
-        </Grid>
-      </Container>
+            ))}
+          </Grid>
+        </Box>
+      </Box>
     </>
   );
 };

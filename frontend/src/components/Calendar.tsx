@@ -17,14 +17,11 @@ You should have received a copy of the GNU General Public License
 along with OpenMachineMonitoring. If not, see <https://www.gnu.org/licenses/>
 */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Box, Flex, Text, Tooltip } from "@chakra-ui/react";
+import { useColorModeValue } from "@chakra-ui/react";
 import { Asset, UsageRecord, colourScheme, uptimeBounds } from "../types";
-import {
-  calculateDaysSinceYearStart,
-  calculateSingleUptime,
-  fetchUsageRecords,
-} from "../functions";
+import { calculateSingleUptime, fetchUsageRecords } from "../functions";
 import { useSettings } from "../SettingsContext";
 
 interface Props {
@@ -33,132 +30,229 @@ interface Props {
 }
 
 const Calendar = (props: Props) => {
-  const { settings, updateSettings } = useSettings();
+  const { settings } = useSettings();
   const [usageRecordData, setUsageRecordData] = useState<UsageRecord[]>([]);
+  const [currentYear] = useState(() => new Date().getFullYear());
 
-  const months = [
-    { name: "Jan", days: 31 },
-    { name: "Feb", days: 28 },
-    { name: "Mar", days: 31 },
-    { name: "Apr", days: 30 },
-    { name: "May", days: 31 },
-    { name: "Jun", days: 30 },
-    { name: "Jul", days: 31 },
-    { name: "Aug", days: 31 },
-    { name: "Sep", days: 30 },
-    { name: "Oct", days: 31 },
-    { name: "Nov", days: 30 },
-    { name: "Dec", days: 31 },
-  ];
+  // Add color mode values
+  const emptyDayColor = useColorModeValue("gray.100", "gray.700");
+  const monthLabelColor = useColorModeValue("gray.600", "gray.400");
+  const dayLabelColor = useColorModeValue("gray.600", "gray.400");
 
   useEffect(() => {
-    fetchUsageRecords(
-      calculateDaysSinceYearStart(),
-      setUsageRecordData,
-      props.asset.id
-    );
-  }, [settings, props.searchTerm]);
+    // Fetch data for the entire year
+    fetchUsageRecords(365, setUsageRecordData, undefined, props.asset?.id);
+  }, [props.asset?.id]);
 
-  const usageDataMinutes = usageRecordData.map((d) => ({
-    ...d,
-    uptime: d.time_on === 0 ? 0 : calculateSingleUptime(d),
-  }));
+  const daysOfWeek = useMemo(() => {
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const startIdx = days.indexOf(settings.week_start);
+    return [...days.slice(startIdx), ...days.slice(0, startIdx)];
+  }, [settings.week_start]);
 
-  // Is the year a leap year?
-  const isLeapYear = (year: number): boolean => {
-    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-  };
+  const usageDataMinutes = useMemo(
+    () =>
+      usageRecordData.map((d) => ({
+        date: new Date(d.date),
+        uptime: d.time_on === 0 ? 0 : calculateSingleUptime(d),
+      })),
+    [usageRecordData]
+  );
 
-  // Update the number of days in February for leap years
-  const updateDaysInFebruary = (year: number): void => {
-    if (isLeapYear(year)) {
-      months[1].days = 29;
-    } else {
-      months[1].days = 28;
+  const dateUptimeMap = useMemo(() => {
+    const map = new Map<string, number>();
+    usageDataMinutes.forEach(({ date, uptime }) => {
+      const formattedDate = date.toLocaleDateString();
+      map.set(formattedDate, uptime);
+    });
+    return map;
+  }, [usageDataMinutes]);
+
+  // Update determineBoxColor to handle dark mode better
+  const determineBoxColor = useCallback(
+    (uptime?: number): string => {
+      if (uptime === undefined) return emptyDayColor;
+      if (uptime >= uptimeBounds.good) {
+        return colourScheme.green;
+      }
+      if (uptime >= uptimeBounds.bad) {
+        return colourScheme.orange;
+      }
+      if (uptime < uptimeBounds.bad) {
+        return colourScheme.red;
+      }
+      return emptyDayColor;
+    },
+    [emptyDayColor]
+  );
+
+  const weeks = useMemo(() => {
+    const weeks: (Date | null)[][] = [];
+    let currentWeek: (Date | null)[] = Array(7).fill(null);
+    let currentDate = new Date(currentYear, 0, 1); // January 1st
+
+    // Get the correct starting day index based on settings
+    const daysArray = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const startDayIndex = daysArray.indexOf(settings.week_start);
+
+    // Calculate the day of week for January 1st (0-6)
+    let firstDayOfWeek = currentDate.getDay();
+
+    // Adjust the day index based on the week start setting
+    firstDayOfWeek = (firstDayOfWeek - startDayIndex + 7) % 7;
+
+    // Fill in the empty days before the first day
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      currentWeek[i] = null;
     }
-  };
 
-  // Map dates to corresponding uptime values
-  const dateUptimeMap = new Map<string, number>();
+    // Fill in the rest of the year
+    while (currentDate.getFullYear() === currentYear) {
+      // Get the adjusted day of week based on week start setting
+      const dayOfWeek = (currentDate.getDay() - startDayIndex + 7) % 7;
 
-  usageDataMinutes.forEach(({ date, uptime }) => {
-    dateUptimeMap.set(date, uptime);
-  });
+      if (dayOfWeek === 0 && currentWeek.some((d) => d !== null)) {
+        weeks.push([...currentWeek]);
+        currentWeek = Array(7).fill(null);
+      }
 
-  // Determine the correct colour for a box based on the uptime
-  const determineBoxColor = (uptime?: number): string => {
-    if (uptime === undefined) {
-      return "gray.300";
+      currentWeek[dayOfWeek] = new Date(currentDate);
+
+      // Move to next day
+      currentDate = new Date(currentDate.getTime() + 86400000);
     }
-    if (uptime >= uptimeBounds.good) {
-      return colourScheme.green;
-    }
-    if (uptime < uptimeBounds.good && uptime >= uptimeBounds.bad) {
-      return colourScheme.orange;
-    }
-    if (uptime < uptimeBounds.bad) {
-      return colourScheme.red;
-    }
-    return "black";
-  };
 
-  // Function to render a box for each day
-  const renderDayBox = (date: Date) => {
-    const dateString = date.toDateString();
+    // Push the last week if it has any days
+    if (currentWeek.some((d) => d !== null)) {
+      // Fill the rest of the week with null
+      for (let i = currentWeek.length - 1; i >= 0; i--) {
+        if (currentWeek[i] === null) break;
+        if (currentWeek[i]?.getFullYear() !== currentYear) {
+          currentWeek[i] = null;
+        }
+      }
+      weeks.push(currentWeek);
+    }
 
-    // TODO: Watch out for BST? Needs testing
-    const formattedDateString = date.toLocaleDateString().split("T")[0];
-    const dataPoint = usageDataMinutes.find((item) => {
-      const itemDateString = new Date(item.date)
-        .toLocaleDateString()
-        .split("T")[0];
-      return itemDateString === formattedDateString;
+    return weeks;
+  }, [currentYear, settings.week_start]);
+
+  const monthLabels = useMemo(() => {
+    const months: { label: string; position: number }[] = [];
+    let currentMonth = -1;
+
+    weeks.forEach((week, weekIndex) => {
+      week.forEach((day) => {
+        if (day && day.getMonth() !== currentMonth) {
+          currentMonth = day.getMonth();
+          months.push({
+            label: new Intl.DateTimeFormat("en-US", { month: "short" }).format(
+              day
+            ),
+            position: weekIndex,
+          });
+        }
+      });
     });
 
-    const uptime = dataPoint?.uptime;
-
-    const boxColor = determineBoxColor(uptime);
-
-    const tooltipLabel = `${date.toLocaleDateString("en-GB")} - Uptime: ${
-      uptime !== undefined ? uptime.toFixed(2) + "%" : "No data"
-    }`;
-
-    return (
-      <Tooltip key={dateString} label={tooltipLabel}>
-        <Box
-          key={dateString}
-          width="20px"
-          height="20px"
-          backgroundColor={boxColor}
-          marginRight="4px"
-          marginBottom="4px"
-        />
-      </Tooltip>
-    );
-  };
-
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  updateDaysInFebruary(currentYear);
+    return months;
+  }, [weeks]);
 
   return (
-    <Flex direction="column" alignItems="flex-start">
-      {months.map(({ name, days }, index) => {
-        return (
-          <Flex key={`f1-${index}`} alignItems="flex-start">
-            <Text key={`t1-${index}`} marginRight="8px">
-              {name}
-            </Text>
-            <Flex key={`f2-${index}`} flexWrap="wrap">
-              {Array.from({ length: days }, (_, i) => {
-                const date = new Date(currentYear, index, i + 1);
-                return renderDayBox(date);
-              })}
+    <Box width="100%" overflowX="auto" pb={2}>
+      <Box minWidth="1200px" display="flex" justifyContent="center">
+        <Box>
+          {/* Month labels */}
+          <Box position="relative" height="20px" mb={2} ml="30px">
+            {monthLabels.map((month, idx) => (
+              <Text
+                key={idx}
+                fontSize="xs"
+                color={monthLabelColor}
+                position="absolute"
+                left={`${month.position * 12}px`}
+                whiteSpace="nowrap"
+                fontWeight="medium"
+              >
+                {month.label}
+              </Text>
+            ))}
+          </Box>
+
+          <Flex>
+            {/* Days of week labels */}
+            <Flex direction="column" mr={2}>
+              {daysOfWeek.map((day, idx) => (
+                <Text
+                  key={idx}
+                  fontSize="xs"
+                  color={dayLabelColor}
+                  height="10px"
+                  lineHeight="10px"
+                  mb="2px"
+                  width="30px"
+                  textAlign="right"
+                  fontWeight="medium"
+                >
+                  {day}
+                </Text>
+              ))}
+            </Flex>
+
+            {/* Calendar grid */}
+            <Flex>
+              {weeks.map((week, weekIdx) => (
+                <Flex key={weekIdx} direction="column" mr="1px">
+                  {week.map((date, dayIdx) => {
+                    if (!date)
+                      return (
+                        <Box
+                          key={`empty-${dayIdx}`}
+                          w="10px"
+                          h="10px"
+                          mb="2px"
+                          bg="transparent"
+                        />
+                      );
+
+                    const formattedDate = date.toLocaleDateString();
+                    const uptime = dateUptimeMap.get(formattedDate);
+                    const tooltipLabel = `${date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}: ${
+                      uptime !== undefined ? uptime.toFixed(1) + "%" : "No data"
+                    }`;
+
+                    return (
+                      <Tooltip
+                        key={dayIdx}
+                        label={tooltipLabel}
+                        placement="top"
+                        hasArrow
+                      >
+                        <Box
+                          w="10px"
+                          h="10px"
+                          mb="2px"
+                          bg={determineBoxColor(uptime)}
+                          borderRadius="sm"
+                          transition="transform 0.2s"
+                          _hover={{
+                            transform: "scale(1.2)",
+                            zIndex: 1,
+                          }}
+                        />
+                      </Tooltip>
+                    );
+                  })}
+                </Flex>
+              ))}
             </Flex>
           </Flex>
-        );
-      })}
-    </Flex>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 

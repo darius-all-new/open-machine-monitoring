@@ -18,7 +18,7 @@ along with OpenMachineMonitoring. If not, see <https://www.gnu.org/licenses/>
 '''
 
 from pydantic import BaseModel, Field
-from typing import Optional, Dict
+from typing import Optional, Dict, Literal
 from datetime import datetime
 
 '''
@@ -49,6 +49,30 @@ class UsageRecordUpdate(BaseModel):
     date: Optional[datetime] = Field(None)
 
 class UsageRecord(UsageRecordBase):
+    id: int
+    asset_id: int
+
+    class Config:
+        orm_mode = True
+
+class DowntimeBase(BaseModel):
+    title: str
+    description: str
+    type: Literal["planned", "unplanned"]
+    start_time: datetime
+    end_time: Optional[datetime] = None
+
+class DowntimeCreate(DowntimeBase):
+    asset_id: int
+
+class DowntimeUpdate(BaseModel):
+    title: Optional[str] = Field(None)
+    description: Optional[str] = Field(None)
+    type: Optional[Literal["planned", "unplanned"]] = Field(None)
+    start_time: Optional[datetime] = Field(None)
+    end_time: Optional[datetime] = Field(None)
+
+class Downtime(DowntimeBase):
     id: int
     asset_id: int
 
@@ -114,4 +138,4 @@ class User(UserBase):
 
 class Query(BaseModel):
     id: int
-    time: int # number of minutes to look back
+    time: int # number of minutes to look back

@@ -87,50 +87,117 @@ const LineGraph = (props: Props) => {
   return (
     <>
       {gdata.length > 0 ? (
-        <ResponsiveContainer aspect={3.0}>
+        <ResponsiveContainer aspect={2.5}>
           <LineChart
             data={gdata}
             margin={{
-              top: 5,
+              top: 20,
               right: 30,
               left: 20,
-              bottom: 5,
+              bottom: 20,
             }}
           >
-            <CartesianGrid stroke="none" />
-            <XAxis dataKey="time" tickFormatter={formatXAxis} tickCount={1} />
-            <YAxis>
-              <Label angle={-90}>Current (A)</Label>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis 
+              dataKey="time" 
+              tickFormatter={formatXAxis} 
+              stroke="#718096"
+              tick={{ fill: '#718096' }}
+            >
+              <Label
+                value="Time"
+                position="bottom"
+                offset={0}
+                style={{ fill: '#718096', fontSize: '0.9em' }}
+              />
+            </XAxis>
+            <YAxis 
+              stroke="#718096"
+              tick={{ fill: '#718096' }}
+            >
+              <Label 
+                value="Current (A)" 
+                angle={-90} 
+                position="left"
+                style={{ fill: '#718096', fontSize: '0.9em' }}
+              />
             </YAxis>
-            <Tooltip labelFormatter={formatTooltipLabel} />
-            <Legend />
+            <Tooltip
+              labelFormatter={formatTooltipLabel}
+              contentStyle={{
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              }}
+              itemStyle={{ color: '#2D3748' }}
+              labelStyle={{ color: '#718096' }}
+            />
+            <Legend 
+              verticalAlign="top"
+              height={36}
+              iconType="circle"
+              formatter={(value) => (
+                <span style={{ color: '#4A5568', fontSize: '0.9em' }}>
+                  {value === 'current' ? 'Power Consumption' : value}
+                </span>
+              )}
+            />
             <Line
               type="monotone"
               dataKey="current"
-              stroke="#000000"
+              stroke={colourScheme.mainButton}
+              strokeWidth={2}
               dot={false}
-              activeDot={{ r: 8 }}
+              activeDot={{ 
+                r: 6, 
+                stroke: colourScheme.mainButton,
+                strokeWidth: 2,
+                fill: 'white'
+              }}
             />
             <ReferenceArea
               y1={0}
               y2={currentBounds.off}
               fill={colourScheme.red}
+              fillOpacity={0.1}
+              strokeOpacity={0}
             />
             <ReferenceArea
               y1={currentBounds.off}
               y2={currentBounds.on}
               fill={colourScheme.orange}
+              fillOpacity={0.1}
+              strokeOpacity={0}
             />
             <ReferenceArea
               y1={currentBounds.on}
               y2={8}
               fill={colourScheme.green}
+              fillOpacity={0.1}
+              strokeOpacity={0}
             />
-            <Brush dataKey="x" height={30} stroke="#8884d8" />
+            <Brush 
+              dataKey="time" 
+              height={30} 
+              stroke={colourScheme.mainButton}
+              fill="white"
+              tickFormatter={formatXAxis}
+              startIndex={Math.max(0, gdata.length - 50)}
+            >
+              <Label
+                value="Drag to zoom"
+                position="top"
+                offset={10}
+                style={{ fill: '#718096', fontSize: '0.8em' }}
+              />
+            </Brush>
           </LineChart>
         </ResponsiveContainer>
       ) : (
-        <Text>No Data</Text>
+        <Text color="gray.500" textAlign="center" py={8}>
+          No data available for this time period
+        </Text>
       )}
     </>
   );

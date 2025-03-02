@@ -26,7 +26,7 @@ import {
   StatLabel,
   StatNumber,
   StatGroup,
-  Spacer,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import { Asset, colourScheme } from "../types";
 import { formatTimeToHoursAndMinutes } from "../functions";
@@ -62,33 +62,124 @@ const AssetItem = (props: Props) => {
     }
   };
 
+  const getBgColor = (status: string) => {
+    if (status === "on") {
+      return useColorModeValue("green.50", "green.900");
+    }
+    if (status === "idle") {
+      return useColorModeValue("orange.50", "orange.900");
+    }
+    if (status === "off") {
+      return useColorModeValue("red.50", "red.900");
+    }
+    if (status === "unknown") {
+      return useColorModeValue("gray.50", "gray.900");
+    }
+  };
+
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const hoverBorderColor = useColorModeValue("gray.300", "gray.500");
+  const bgColor = useColorModeValue("white", "gray.800");
+  const statsBgColor = useColorModeValue("gray.50", "gray.700");
+  const labelColor = useColorModeValue("gray.600", "gray.400");
+
   return (
-    <Flex alignItems="center" p={4} border="1px solid" borderRadius="md">
-      <Box flex={1}>
-        <Flex align="center">
+    <Box
+      p={6}
+      border="1px solid"
+      borderColor={borderColor}
+      borderRadius="lg"
+      transition="all 0.2s"
+      _hover={{
+        transform: "translateY(-2px)",
+        boxShadow: "lg",
+        borderColor: hoverBorderColor,
+      }}
+      bg={bgColor}
+    >
+      <Flex alignItems="center" justifyContent="space-between" mb={4}>
+        <Flex
+          alignItems="center"
+          bg={getBgColor(props.asset.status)}
+          py={1}
+          px={3}
+          borderRadius="full"
+          border="1px solid"
+          borderColor={getColour(props.asset.status)}
+        >
           <Box
-            w="20px"
-            h="20px"
+            w="6px"
+            h="6px"
             borderRadius="full"
             bg={getColour(props.asset.status)}
-            boxShadow="md"
-          ></Box>
-          <Text pl={2}>{props.asset.status}</Text>
-          <Spacer />
-          <Text>{props.asset.topic}</Text>
+            position="relative"
+            _after={{
+              content: '""',
+              position: "absolute",
+              top: "-1px",
+              left: "-1px",
+              right: "-1px",
+              bottom: "-1px",
+              borderRadius: "full",
+              animation:
+                props.asset.status === "on" ? "pulse 2s infinite" : "none",
+              background: getColour(props.asset.status),
+              opacity: 0.4,
+            }}
+            sx={{
+              "@keyframes pulse": {
+                "0%": {
+                  transform: "scale(1)",
+                  opacity: 0.4,
+                },
+                "70%": {
+                  transform: "scale(2)",
+                  opacity: 0,
+                },
+                "100%": {
+                  transform: "scale(1)",
+                  opacity: 0,
+                },
+              },
+            }}
+          />
+          <Text
+            pl={2}
+            fontSize="sm"
+            color={getColour(props.asset.status)}
+            textTransform="capitalize"
+            fontWeight="medium"
+          >
+            {props.asset.status}
+          </Text>
         </Flex>
+        <Text fontSize="sm" color="gray.500" fontFamily="mono">
+          {props.asset.topic}
+        </Text>
+      </Flex>
 
-        <Text pt={3} fontWeight="bold" fontSize="2xl">
+      <Box mb={6}>
+        <Text fontWeight="bold" fontSize="2xl" mb={1} lineHeight="1.2">
           {props.asset.manufacturer}
         </Text>
-        <Text fontSize="md">{props.asset.model}</Text>
+        <Text fontSize="md" color="gray.600">
+          {props.asset.model}
+        </Text>
+      </Box>
 
-        <Stat py={3}>
-          <StatLabel>Utilisation</StatLabel>
-          <StatNumber>
-            {/* TODO: Move uptime calculation to functions.ts  */}
+      <Box
+        mb={6}
+        p={4}
+        bg={statsBgColor}
+        borderRadius="md"
+        border="1px solid"
+        borderColor={borderColor}
+      >
+        <Stat>
+          <StatLabel color={labelColor}>Utilisation Rate</StatLabel>
+          <StatNumber fontSize="2xl" color={colourScheme.mainButton}>
             {upTimeRounded == 0
-              ? 0.0
+              ? "0.00"
               : (
                   100 *
                   (upTimeRounded /
@@ -97,39 +188,49 @@ const AssetItem = (props: Props) => {
             %
           </StatNumber>
         </Stat>
-
-        <StatGroup>
-          <Stat size="sm">
-            <StatLabel>Uptime</StatLabel>
-            <StatNumber>
-              {formatTimeToHoursAndMinutes(upTimeRounded)}
-            </StatNumber>
-          </Stat>
-          <Stat size="sm">
-            <StatLabel>Idle time</StatLabel>
-            <StatNumber>
-              {formatTimeToHoursAndMinutes(idleTimeRounded)}
-            </StatNumber>
-          </Stat>
-          <Stat size="sm">
-            <StatLabel>Downtime</StatLabel>
-            <StatNumber>
-              {formatTimeToHoursAndMinutes(downTimeRounded)}
-            </StatNumber>
-          </Stat>
-        </StatGroup>
-
-        <Button
-          border="solid 1px"
-          mt={5}
-          w="full"
-          size="sm"
-          onClick={props.onDataViewClick}
-        >
-          View Data
-        </Button>
       </Box>
-    </Flex>
+
+      <StatGroup
+        display="grid"
+        gridTemplateColumns="repeat(3, 1fr)"
+        gap={4}
+        mb={6}
+      >
+        <Stat size="sm">
+          <StatLabel color={labelColor}>Uptime</StatLabel>
+          <StatNumber fontSize="md" color={colourScheme.green}>
+            {formatTimeToHoursAndMinutes(upTimeRounded)}
+          </StatNumber>
+        </Stat>
+        <Stat size="sm">
+          <StatLabel color={labelColor}>Idle time</StatLabel>
+          <StatNumber fontSize="md" color={colourScheme.orange}>
+            {formatTimeToHoursAndMinutes(idleTimeRounded)}
+          </StatNumber>
+        </Stat>
+        <Stat size="sm">
+          <StatLabel color={labelColor}>Downtime</StatLabel>
+          <StatNumber fontSize="md" color={colourScheme.red}>
+            {formatTimeToHoursAndMinutes(downTimeRounded)}
+          </StatNumber>
+        </Stat>
+      </StatGroup>
+
+      <Button
+        w="full"
+        size="md"
+        colorScheme="blue"
+        variant="outline"
+        onClick={props.onDataViewClick}
+        _hover={{
+          transform: "translateY(-1px)",
+          boxShadow: "sm",
+        }}
+        transition="all 0.2s"
+      >
+        View Details
+      </Button>
+    </Box>
   );
 };
 

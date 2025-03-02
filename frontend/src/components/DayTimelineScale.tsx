@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with OpenMachineMonitoring. If not, see <https://www.gnu.org/licenses/>
 */
 
-import { Box, Text } from "@chakra-ui/react";
+import { Box, Text, useColorModeValue } from "@chakra-ui/react";
 
 interface Range {
   time_begin: string;
@@ -28,16 +28,15 @@ interface Range {
 }
 
 interface Props {
-  activities: Range[];
   startHour: number;
   endHour: number;
+  xAxisData: Range[];
 }
 
 const DayTimelineScale = (props: Props) => {
   const regionStartTime = props.startHour * 60 * 60 * 1000;
   const regionEndTime = props.endHour * 60 * 60 * 1000;
-
-  const dayDuration = regionEndTime - regionStartTime; // Number of milliseconds
+  const dayDuration = regionEndTime - regionStartTime;
 
   const convertToMilliseconds = (timeString: string): number => {
     const date = new Date(timeString);
@@ -49,9 +48,7 @@ const DayTimelineScale = (props: Props) => {
     const day = date.getDate();
     const month = date.getMonth();
     const year = date.getFullYear();
-
-    const dateStartOfDay = new Date(year, month, day, props.startHour, 0, 0, 0); // Months are zero-indexed
-
+    const dateStartOfDay = new Date(year, month, day, props.startHour, 0, 0, 0);
     return dateStartOfDay.getTime();
   };
 
@@ -66,7 +63,6 @@ const DayTimelineScale = (props: Props) => {
   const calculateBlockLeft = (activity: Range): string => {
     const startTime = convertToMilliseconds(activity.time_begin);
     const startOfTheDay = getMillisecondsForDayStart(activity.time_begin);
-
     const relativeStartTime = startTime - startOfTheDay;
     const startPercentage = (relativeStartTime / dayDuration) * 100;
     return `${startPercentage}%`;
@@ -74,28 +70,53 @@ const DayTimelineScale = (props: Props) => {
 
   const getHours = (timestamp: string): string => {
     const date = new Date(timestamp);
-    const hoursString = date.getHours();
-    return hoursString.toString().padStart(2, "0") + ":00";
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`;
   };
 
   return (
-    <Box bg="gray.200" height="50px" position="relative">
-      {props.activities.map((activity, index) => (
-        <Box
-          key={index}
-          position="absolute"
-          bg="white"
-          opacity={1.0}
-          height="100%"
-          top="0"
-          left={calculateBlockLeft(activity)}
-          width={calculateBlockWidth(activity)}
-        >
-          <Text fontSize="sm" color="gray.600">
-            {getHours(activity.time_begin)}
-          </Text>
-        </Box>
-      ))}
+    <Box 
+      height="24px" 
+      position="relative" 
+      mb={1}
+      overflow="hidden"
+      borderRadius="md"
+    >
+      {/* Time markers */}
+      {props.xAxisData.map((activity, index) => {
+        const leftPosition = calculateBlockLeft(activity);
+        const width = calculateBlockWidth(activity);
+        const leftPercentage = parseFloat(leftPosition);
+        
+        // Only show time markers that are within view or near the edges
+        if (leftPercentage < -10 || leftPercentage > 110) {
+          return null;
+        }
+
+        return (
+          <Box
+            key={index}
+            position="absolute"
+            height="100%"
+            top="0"
+            left={leftPosition}
+            width={width}
+            borderLeft={index > 0 ? "1px" : "none"}
+            borderColor={useColorModeValue("gray.300", "gray.600")}
+          >
+            <Text
+              fontSize="xs"
+              color={useColorModeValue("gray.600", "gray.400")}
+              position="absolute"
+              left={1}
+              top={0}
+            >
+              {getHours(activity.time_begin)}
+            </Text>
+          </Box>
+        );
+      })}
     </Box>
   );
 };

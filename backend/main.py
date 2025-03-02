@@ -22,7 +22,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine
-from api import settings, assets, data, processing
+from api import settings, assets, data, processing, downtime
 import models
 
 # Load config parameters from config.toml
@@ -68,3 +68,4 @@ app.include_router(settings.router)
 app.include_router(assets.router)
 app.include_router(data.router)
 app.include_router(processing.router)
+app.include_router(downtime.router)

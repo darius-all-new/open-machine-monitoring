@@ -17,7 +17,7 @@ You should have received a copy of the GNU General Public License
 along with OpenMachineMonitoring. If not, see <https://www.gnu.org/licenses/>
 */
 
-import { Grid, GridItem, Text } from "@chakra-ui/react";
+import { Box, Grid, Text, useColorModeValue } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import {
   Asset,
@@ -29,6 +29,7 @@ import {
 } from "../types";
 import DayTimeline from "./DayTimeline";
 import DayTimelineScale from "./DayTimelineScale";
+import { getApiUrl } from "../config";
 
 // TODO: ProcessedData and Range need to go to types.ts ... ?
 
@@ -36,6 +37,11 @@ interface Props {
   asset: Asset;
   startHour: number;
   endHour: number;
+  onDowntimeClick: (
+    activity: Range,
+    assetId: number,
+    assetName: string
+  ) => void;
 }
 
 const TimeBarPanel = (props: Props) => {
@@ -214,6 +220,19 @@ const TimeBarPanel = (props: Props) => {
     },
   ];
 
+  const getStatusColour = (status: string) => {
+    if (status === "Up") {
+      return colourScheme.green;
+    }
+    if (status === "Down") {
+      return colourScheme.red;
+    }
+    if (status === "Idle") {
+      return colourScheme.orange;
+    }
+    return useColorModeValue(colourScheme.grey, colourScheme.greyDark);
+  };
+
   const transformData = (data: ProcessedData[]): Range[] => {
     const transformedData: Range[] = [];
 
@@ -281,7 +300,9 @@ const TimeBarPanel = (props: Props) => {
 
       // TODO: Use the retrieveData function from functions.ts
       const response = await fetch(
-        `http://localhost:8000/data/period?asset_id=${props.asset.id}&time_from=${startTime}&time_to=${endTime}`,
+        getApiUrl(
+          `data/period?asset_id=${props.asset.id}&time_from=${startTime}&time_to=${endTime}`
+        ),
         {
           method: "POST",
           headers: {
@@ -341,38 +362,60 @@ const TimeBarPanel = (props: Props) => {
   }, []);
 
   return (
-    <>
-      <Grid py={1} templateColumns="minmax(200px, max-content) 1fr" gap={4}>
-        <GridItem
-          bg={
-            props.asset.status === "on"
-              ? colourScheme.green
-              : props.asset.status === "off"
-              ? colourScheme.red
-              : props.asset.status === "idle"
-              ? colourScheme.orange
-              : colourScheme.grey
-          }
-          p={4}
-        >
-          <Text fontSize="2xl">{props.asset.manufacturer}</Text>
-          <Text>{props.asset.model}</Text>
-          <Text>Status: {props.asset.status}</Text>
-        </GridItem>
-        <GridItem bg="gray.200" py={4} width="100%" overflowX="hidden">
-          <DayTimeline
-            startHour={props.startHour}
-            endHour={props.endHour}
-            activities={timeRangeData}
-          />
+    <Box
+      p={4}
+      bg={useColorModeValue("white", "gray.800")}
+      borderRadius="md"
+      border="1px"
+      borderColor={useColorModeValue("gray.200", "gray.600")}
+      _hover={{
+        borderColor: useColorModeValue("gray.300", "gray.500"),
+        boxShadow: useColorModeValue("sm", "dark-lg"),
+      }}
+      transition="all 0.2s"
+    >
+      <Grid templateColumns="250px 1fr" gap={4} alignItems="center">
+        <Box>
+          <Text
+            fontWeight="medium"
+            fontSize="lg"
+            mb={1}
+            color={useColorModeValue("gray.800", "white")}
+          >
+            {props.asset.manufacturer}
+          </Text>
+          <Text color={useColorModeValue("gray.600", "gray.300")} fontSize="sm">
+            {props.asset.model}
+          </Text>
+          <Text
+            color={useColorModeValue("gray.500", "gray.400")}
+            fontSize="xs"
+            fontFamily="mono"
+            mt={1}
+          >
+            {props.asset.topic}
+          </Text>
+        </Box>
+
+        <Box>
           <DayTimelineScale
             startHour={props.startHour}
             endHour={props.endHour}
-            activities={xAxisData}
+            xAxisData={xAxisData}
           />
-        </GridItem>
+          <Box position="relative" mt={1}>
+            <DayTimeline
+              activities={timeRangeData}
+              startHour={props.startHour}
+              endHour={props.endHour}
+              assetId={props.asset.id}
+              assetName={`${props.asset.manufacturer} ${props.asset.model}`}
+              onDowntimeClick={props.onDowntimeClick}
+            />
+          </Box>
+        </Box>
       </Grid>
-    </>
+    </Box>
   );
 };
 

@@ -33,20 +33,48 @@ import {
   ModalHeader,
   ModalOverlay,
   Select,
+  useDisclosure,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  VStack,
+  useBreakpointValue,
+  useColorMode,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
 } from "@chakra-ui/react";
 import { CiSettings } from "react-icons/ci";
+import { HiMenu } from "react-icons/hi";
+import { FiSun, FiMoon, FiChevronDown } from "react-icons/fi";
 import { useSettings } from "../SettingsContext";
 import { useState } from "react";
 import NavButton from "./NavButton";
 
+type NavItem = {
+  label: string;
+  linkTo?: string;
+  items?: {
+    label: string;
+    linkTo: string;
+  }[];
+};
+
 const NavBar = () => {
+  const { colorMode, toggleColorMode } = useColorMode();
   const { settings, updateSettings } = useSettings();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [updatedSettings, setUpdatedSettings] = useState(settings);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const isMobile = useBreakpointValue({ base: true, md: false });
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
-    setUpdatedSettings(settings); // Reset the updated settings to the current settings
+    setUpdatedSettings(settings);
   };
 
   const handleCloseModal = () => {
@@ -71,8 +99,48 @@ const NavBar = () => {
     }));
   };
 
-  const textColour = "black";
-  const bgColour = "#dddddd"; // "#f5d140"; //"#1463b3";
+  const textColour = "white";
+
+  const navItems: NavItem[] = [
+    {
+      label: "Monitoring",
+      items: [
+        { label: "Assets", linkTo: "/asset-view" },
+        { label: "Timeline", linkTo: "/timeline" },
+      ],
+    },
+    {
+      label: "Utilisation Analysis",
+      items: [
+        { label: "This Week", linkTo: "/weekly-dashboard" },
+        { label: "Calendar", linkTo: "/calendar" },
+        { label: "Rankings", linkTo: "/ranking" },
+        { label: "Comparison", linkTo: "/comparison" },
+      ],
+    },
+    {
+      label: "Downtime Management",
+      items: [
+        { label: "Downtime Logs", linkTo: "/downtime-logs" },
+        { label: "Downtime Stats", linkTo: "/downtime-stats" },
+      ],
+    },
+  ];
+
+  const SettingsButton = () => (
+    <IconButton
+      aria-label="Settings"
+      icon={<CiSettings />}
+      size="lg"
+      color={colorMode === "light" ? "gray.800" : "white"}
+      variant="ghost"
+      fontSize="4xl"
+      _focus={{ outline: "none" }}
+      _hover={{ color: "teal" }}
+      _activeLink={{ color: "red" }}
+      onClick={handleOpenModal}
+    />
+  );
 
   return (
     <>
@@ -80,41 +148,128 @@ const NavBar = () => {
         as="nav"
         align="center"
         justify="space-between"
+        wrap="wrap"
         padding="1rem"
-        backgroundColor={bgColour} //"gray.800"
-        color={textColour}
+        bg={colorMode === "light" ? "white" : "gray.800"}
+        boxShadow="sm"
       >
         <Box px={["1rem", "1rem", "0"]} as="button">
           <Link href="/" display="flex" alignItems="center">
             <Image src="/omm_logo.svg" alt="OMM Logo" boxSize="60px" mr={1} />
           </Link>
         </Box>
-        <Flex
-          direction={["row", "row", "row"]}
-          alignItems={["center", "center", "center"]}
-          py={5}
-        >
-          <NavButton label="Assets" linkTo="/asset-view" />
-          <NavButton label="Timeline" linkTo="/timeline" />
-          <NavButton label="This Week" linkTo="/weekly-dashboard" />
-          <NavButton label="Calendar" linkTo="/calendar" />
-          <NavButton label="Rankings" linkTo="/ranking" />
 
-          <IconButton
-            aria-label="Settings"
-            icon={<CiSettings />}
-            size="lg"
-            color={textColour}
-            variant="ghost"
-            fontSize="4xl"
-            _focus={{ outline: "none" }}
-            _hover={{ color: "teal" }}
-            _activeLink={{ color: "red" }}
-            onClick={handleOpenModal}
-          />
-        </Flex>
+        {isMobile ? (
+          <Flex gap={2}>
+            <SettingsButton />
+            <IconButton
+              aria-label="Open menu"
+              icon={<HiMenu />}
+              size="lg"
+              color={textColour}
+              variant="ghost"
+              fontSize="2xl"
+              onClick={onOpen}
+            />
+          </Flex>
+        ) : (
+          <Flex direction="row" alignItems="center" py={5}>
+            {navItems.map((item) =>
+              item.items ? (
+                <Menu key={item.label}>
+                  <MenuButton
+                    as={Button}
+                    rightIcon={<FiChevronDown />}
+                    variant="ghost"
+                    _hover={{ color: "teal" }}
+                  >
+                    {item.label}
+                  </MenuButton>
+                  <MenuList>
+                    {item.items.map((subItem) => (
+                      <Link
+                        key={subItem.label}
+                        href={subItem.linkTo}
+                        _hover={{ textDecoration: "none" }}
+                        width="100%"
+                        display="block"
+                      >
+                        <MenuItem>{subItem.label}</MenuItem>
+                      </Link>
+                    ))}
+                  </MenuList>
+                </Menu>
+              ) : item.linkTo ? (
+                <NavButton
+                  key={item.label}
+                  label={item.label}
+                  linkTo={item.linkTo}
+                />
+              ) : null
+            )}
+            <Box display="flex" alignItems="center" gap={4}>
+              <IconButton
+                aria-label={`Switch to ${
+                  colorMode === "light" ? "dark" : "light"
+                } mode`}
+                icon={colorMode === "light" ? <FiMoon /> : <FiSun />}
+                onClick={() => {
+                  toggleColorMode();
+                  updateSettings({
+                    ...settings,
+                    colorMode: colorMode === "light" ? "dark" : "light",
+                  });
+                }}
+                variant="ghost"
+                size="md"
+              />
+              <SettingsButton />
+            </Box>
+          </Flex>
+        )}
       </Flex>
 
+      {/* Mobile Drawer */}
+      <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
+        <DrawerOverlay />
+        <DrawerContent bg={colorMode === "light" ? "white" : "gray.800"}>
+          <DrawerCloseButton />
+          <DrawerHeader borderBottomWidth="1px">Menu</DrawerHeader>
+          <DrawerBody>
+            <VStack spacing={4} align="stretch" pt={4}>
+              {navItems.map((item) =>
+                item.items ? (
+                  <VStack key={item.label} align="stretch" spacing={2}>
+                    <Box fontWeight="bold">{item.label}</Box>
+                    {item.items.map((subItem) => (
+                      <Link
+                        key={subItem.label}
+                        href={subItem.linkTo}
+                        onClick={onClose}
+                        pl={4}
+                        _hover={{ textDecoration: "none", color: "teal" }}
+                      >
+                        {subItem.label}
+                      </Link>
+                    ))}
+                  </VStack>
+                ) : (
+                  <Link
+                    key={item.label}
+                    href={item.linkTo}
+                    onClick={onClose}
+                    _hover={{ textDecoration: "none", color: "teal" }}
+                  >
+                    {item.label}
+                  </Link>
+                )
+              )}
+            </VStack>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Settings Modal */}
       <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
         <ModalOverlay />
         <ModalContent>

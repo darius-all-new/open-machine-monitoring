@@ -22,7 +22,8 @@ import { Asset, UsageRecord } from "../types";
 import { calculateDaysToWeekStart, fetchUsageRecords } from "../functions";
 import { useSettings } from "../SettingsContext";
 import BarChartComponent from "./BarChartComponent";
-import { Center, Text } from "@chakra-ui/react";
+import { Box, Flex, Text, Heading, Center, Divider, useColorModeValue } from "@chakra-ui/react";
+import { FiBox } from "react-icons/fi";
 import TrendMessage from "./TrendMessage";
 
 interface Props {
@@ -31,35 +32,93 @@ interface Props {
 }
 
 const WeeklyViewAssetPanel = (props: Props) => {
-  const { settings, updateSettings } = useSettings();
+  const { settings } = useSettings();
+  const headerBg = useColorModeValue("blue.50", "blue.900");
+  const headerColor = useColorModeValue("blue.500", "blue.200");
+  const headingColor = useColorModeValue("gray.700", "white");
+  const subTextColor = useColorModeValue("gray.600", "gray.300");
+  const chartBg = useColorModeValue("white", "gray.800");
+  const trendBg = useColorModeValue("blue.50", "blue.900");
+  const trendColor = useColorModeValue("gray.700", "gray.100");
+  const noDataColor = useColorModeValue("gray.500", "gray.400");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  
   const [usageRecordData, setUsageRecordData] = useState<UsageRecord[]>([]);
 
   useEffect(() => {
     fetchUsageRecords(
       calculateDaysToWeekStart(settings.week_start),
       setUsageRecordData,
+      undefined,
       props.asset.id
     );
-  }, [settings, props.searchTerm]);
+  }, [settings, props.searchTerm, props.asset.id]);
 
   return (
-    <>
-      <Text p={5}>
-        {props.asset.manufacturer} {props.asset.model}
-      </Text>
-      {usageRecordData.length > 0 ? (
-        <>
-          <BarChartComponent data={usageRecordData} />
-          <TrendMessage usageData={usageRecordData} />
-        </>
-      ) : (
-        <Center>
-          <Text fontWeight="bold" p={5}>
-            No usage data for {props.asset.manufacturer} {props.asset.model}
+    <Box 
+      p={6} 
+      bg={useColorModeValue("white", "gray.800")}
+      borderRadius="lg"
+      borderWidth="1px"
+      borderColor={borderColor}
+      boxShadow={useColorModeValue("sm", "dark-lg")}
+    >
+      {/* Asset Header */}
+      <Flex align="center" mb={4}>
+        <Box
+          bg={headerBg}
+          p={2}
+          borderRadius="lg"
+          mr={3}
+          color={headerColor}
+        >
+          <FiBox size={20} />
+        </Box>
+        <Box>
+          <Heading size="sm" mb={1} color={headingColor}>
+            {props.asset.manufacturer}
+          </Heading>
+          <Text 
+            color={subTextColor}
+            fontSize="sm"
+            fontWeight="medium"
+          >
+            {props.asset.model}
           </Text>
+        </Box>
+      </Flex>
+
+      <Divider mb={4} borderColor={borderColor} />
+
+      {usageRecordData.length > 0 ? (
+        <Box>
+          <Box 
+            mb={4} 
+            bg={chartBg}
+            p={3} 
+            borderRadius="lg"
+            borderWidth="1px"
+            borderColor={borderColor}
+          >
+            <BarChartComponent data={usageRecordData} />
+          </Box>
+          <Box 
+            bg={trendBg}
+            p={4} 
+            borderRadius="lg"
+            color={trendColor}
+            borderWidth="1px"
+            borderColor={borderColor}
+          >
+            <TrendMessage usageData={usageRecordData} />
+          </Box>
+        </Box>
+      ) : (
+        <Center p={8}>
+          <Text color={noDataColor}>No data available for this week</Text>
         </Center>
       )}
-    </>
+    </Box>
   );
 };
 

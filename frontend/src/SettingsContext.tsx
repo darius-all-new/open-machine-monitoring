@@ -25,6 +25,7 @@ const initialSettings: Settings = {
   id: 1,
   day_duration: 0,
   week_start: "Monday",
+  colorMode: 'light'
 };
 
 type SettingsContextProps = {

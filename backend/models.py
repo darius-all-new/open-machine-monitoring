@@ -40,6 +40,7 @@ class Asset(Base):
     usage_data = Column(JSON)
 
     usage_records = relationship("UsageRecord", back_populates="asset")
+    downtime_records = relationship("Downtime", back_populates="asset")
     # time_on = Column(Float)
     # time_off = Column(Float)
     # time_idle = Column(Float)
@@ -58,6 +59,19 @@ class UsageRecord(Base):
     asset_id = Column(Integer, ForeignKey("assets.id"))
 
     asset = relationship("Asset", back_populates="usage_records")
+
+class Downtime(Base):
+    __tablename__ = "downtime"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, index=True)
+    description = Column(String)
+    type = Column(String, index=True)  # "planned" or "unplanned"
+    start_time = Column(DateTime, index=True)
+    end_time = Column(DateTime, index=True, nullable=True)
+    asset_id = Column(Integer, ForeignKey("assets.id"))
+
+    asset = relationship("Asset", back_populates="downtime_records")
 
 class Settings(Base):
     __tablename__ = "settings"

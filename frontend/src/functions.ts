@@ -24,14 +24,14 @@ import {
   Settings,
   UptimeDataStruct,
   UsageRecord,
+  Downtime,
 } from "./types";
+import { config, getApiUrl } from './config';
 
 type SetAssetsFunction = React.Dispatch<React.SetStateAction<Asset[]>>;
 type SetAssetFunction = React.Dispatch<React.SetStateAction<Asset>>;
 type SetDataFunction = React.Dispatch<React.SetStateAction<Data[]>>;
-type SetUsageRecordsFunction = React.Dispatch<
-  React.SetStateAction<UsageRecord[]>
->;
+type SetUsageRecordsFunction = (records: UsageRecord[]) => void;
 
 export const formatTimeToHoursAndMinutes = (durationInSeconds: number) => {
   const hours = Math.floor(durationInSeconds / 3600);
@@ -45,8 +45,6 @@ export const formatTimeToHoursAndMinutes = (durationInSeconds: number) => {
   return formattedTime;
 };
 
-const BASE_URL = "http://localhost:8000";
-
 /*
 Get an asset with a given id
 */
@@ -59,7 +57,7 @@ export const fetchAsset = async (
     return;
   }
   try {
-    const response = await fetch(BASE_URL + `/get-assets/${asset_id}`, {
+    const response = await fetch(getApiUrl(`/get-assets/${asset_id}`), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -82,7 +80,7 @@ Get all connected assets
 */
 export const fetchAllAssets = async (setAssets: SetAssetsFunction) => {
   try {
-    const response = await fetch(BASE_URL + "/get-assets", {
+    const response = await fetch(getApiUrl("/get-assets"), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -104,7 +102,7 @@ Update metrics (up/down/idle times) for each asset
 */
 export const updateMetrics = async () => {
   try {
-    const response = await fetch(BASE_URL + "/calculate/day-metrics", {
+    const response = await fetch(getApiUrl("/calculate/day-metrics"), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -124,7 +122,7 @@ Update the status of each asset to the latest available
 */
 export const updateAssetStatuses = async () => {
   try {
-    const response = await fetch(BASE_URL + "/update-asset-statuses", {
+    const response = await fetch(getApiUrl("/update-asset-statuses"), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -147,7 +145,7 @@ export const createNewAsset = async (
   topic: string
 ): Promise<BasicFunctionReturn> => {
   try {
-    const response = await fetch(BASE_URL + "/create-asset", {
+    const response = await fetch(getApiUrl("/create-asset"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -176,8 +174,7 @@ export const retrieveData = async (
 ) => {
   try {
     const response = await fetch(
-      BASE_URL +
-        `/data/period?asset_id=${asset_id}&time_from=${startTime}&time_to=${endTime}`,
+      getApiUrl(`/data/period?asset_id=${asset_id}&time_from=${startTime}&time_to=${endTime}`),
       {
         method: "POST",
         headers: {
@@ -196,6 +193,173 @@ export const retrieveData = async (
     }
   } catch (error) {
     console.error("Error:", error);
+  }
+};
+
+/*
+Fetch all downtime events for an asset
+*/
+export const fetchDowntimesByAsset = async (assetId: number): Promise<Downtime[]> => {
+  try {
+    const response = await fetch(getApiUrl(`/get-downtimes-by-asset/${assetId}`));
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      console.error("Error fetching downtimes:", response.status);
+      return [];
+    }
+  } catch (error) {
+    console.error("Error fetching downtimes:", error);
+    return [];
+  }
+};
+
+/*
+Fetch a specific downtime event by ID
+*/
+export const fetchDowntimeById = async (downtimeId: number): Promise<Downtime | null> => {
+  try {
+    const response = await fetch(getApiUrl(`/get-downtime/${downtimeId}`));
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      console.error("Error fetching downtime:", response.status);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching downtime:", error);
+    return null;
+  }
+};
+
+/*
+Create a new downtime event
+*/
+export const createDowntime = async (downtimeData: {
+  title: string;
+  description: string;
+  type: "planned" | "unplanned";
+  start_time: string;
+  end_time?: string;
+  asset_id: number;
+}): Promise<Downtime | null> => {
+  try {
+    const response = await fetch(getApiUrl("/create-downtime"), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(downtimeData),
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      console.error("Error creating downtime:", response.status);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error creating downtime:", error);
+    return null;
+  }
+};
+
+/*
+Update an existing downtime event
+*/
+export const updateDowntime = async (
+  downtimeId: number,
+  downtimeData: {
+    title?: string;
+    description?: string;
+    type?: "planned" | "unplanned";
+    start_time?: string;
+    end_time?: string;
+  }
+): Promise<Downtime | null> => {
+  try {
+    const response = await fetch(getApiUrl(`/update-downtime/${downtimeId}`), {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(downtimeData),
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    } else {
+      console.error("Error updating downtime:", response.status);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error updating downtime:", error);
+    return null;
+  }
+};
+
+/*
+Delete a downtime event
+*/
+export const deleteDowntime = async (downtimeId: number): Promise<boolean> => {
+  try {
+    const response = await fetch(getApiUrl(`/delete-downtime/${downtimeId}`), {
+      method: "DELETE",
+    });
+    
+    if (response.ok) {
+      return true;
+    } else {
+      console.error("Error deleting downtime:", response.status);
+      return false;
+    }
+  } catch (error) {
+    console.error("Error deleting downtime:", error);
+    return false;
+  }
+};
+
+/*
+Find a downtime event that overlaps with a specific time range for an asset
+*/
+export const findDowntimeForTimeRange = async (
+  assetId: number,
+  startTime: string,
+  endTime: string
+): Promise<Downtime | null> => {
+  try {
+    const downtimes = await fetchDowntimesByAsset(assetId);
+    
+    if (!downtimes || downtimes.length === 0) {
+      return null;
+    }
+    
+    // Convert input times to Date objects for comparison
+    const rangeStart = new Date(startTime);
+    const rangeEnd = endTime ? new Date(endTime) : new Date();
+    
+    // Find a downtime that overlaps with the specified time range
+    const overlappingDowntime = downtimes.find(downtime => {
+      const downtimeStart = new Date(downtime.start_time);
+      const downtimeEnd = downtime.end_time ? new Date(downtime.end_time) : null;
+      
+      // If downtime has no end time (ongoing), it overlaps if it started before the range ends
+      if (!downtimeEnd) {
+        return downtimeStart <= rangeEnd;
+      }
+      
+      // Check for overlap: downtime starts before range ends AND downtime ends after range starts
+      return downtimeStart <= rangeEnd && downtimeEnd >= rangeStart;
+    });
+    
+    return overlappingDowntime || null;
+  } catch (error) {
+    console.error("Error finding downtime for time range:", error);
+    return null;
   }
 };
 
@@ -246,14 +410,14 @@ Retrieve usage records for all assets (or one specific asset) over a given numbe
 export const fetchUsageRecords = async (
   numberOfDays: number,
   setUsageRecords: SetUsageRecordsFunction,
+  startDate?: Date,
   assetOfInterest?: number
 ) => {
   try {
     let response: Response;
     if (assetOfInterest) {
       response = await fetch(
-        BASE_URL +
-          `/usage-records-for-asset?asset_id=${assetOfInterest}&days=${numberOfDays}`,
+        getApiUrl(`/usage-records-for-asset?asset_id=${assetOfInterest}&days=${numberOfDays}`),
         {
           method: "GET",
           headers: {
@@ -263,7 +427,7 @@ export const fetchUsageRecords = async (
       );
     } else {
       response = await fetch(
-        BASE_URL + `/usage-records-for-all-assets?days=${numberOfDays}`,
+        getApiUrl(`/usage-records-for-all-assets?days=${numberOfDays}`),
         {
           method: "GET",
           headers: {
@@ -275,13 +439,12 @@ export const fetchUsageRecords = async (
 
     if (response.ok) {
       const response_data = await response.json();
-      // console.log(`From fetch = ${JSON.stringify(response_data)}`);
       setUsageRecords(response_data);
     } else {
       console.error("Error:", response.status);
     }
   } catch (error) {
-    console.error("Error: ", error);
+    console.error("Error:", error);
   }
 };
 
@@ -290,7 +453,7 @@ Retrieve settings
 */
 export const fetchSettings = async () => {
   try {
-    const response = await fetch(BASE_URL + "/settings", {
+    const response = await fetch(getApiUrl("/settings"), {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     });
@@ -311,7 +474,7 @@ Make changes to settings
 export const changeSettings = async (updatedSettings: Settings) => {
   try {
     // TODO: hardcoded settings_id
-    const response = await fetch(BASE_URL + "/update-settings?settings_id=1", {
+    const response = await fetch(getApiUrl("/update-settings?settings_id=1"), {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

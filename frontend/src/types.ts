@@ -22,7 +22,9 @@ export const colourScheme = {
   orange: "#f5992a",
   green: "#49c414",
   grey: "#eeeeee",
+  greyDark: "#4A5568",
   mainButton: "#1463b3",
+  mainButtonDark: "#63B3ED",
   mainButtonHover: "#96c0eb",
   mainButtonText: "white",
   mainButtonTextHover: "black",
@@ -108,6 +110,7 @@ export interface Settings {
   id: number;
   day_duration: number;
   week_start: string;
+  colorMode: "light" | "dark";
 }
 
 /*
@@ -128,4 +131,17 @@ Holds information on status for a given time
 export interface ProcessedData {
   time: string;
   status: "Up" | "Down" | "Idle";
+}
+
+/*
+Represents a downtime event for an asset
+*/
+export interface Downtime {
+  id: number;
+  title: string;
+  description: string;
+  type: "planned" | "unplanned";
+  start_time: string;
+  end_time?: string;
+  asset_id: number;
 }
