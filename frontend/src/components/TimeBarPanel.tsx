@@ -27,11 +27,10 @@ import {
   colourScheme,
   currentBounds,
 } from "../types";
+import { useSettings } from "../SettingsContext";
 import DayTimeline from "./DayTimeline";
 import DayTimelineScale from "./DayTimelineScale";
 import { getApiUrl } from "../config";
-
-// TODO: ProcessedData and Range need to go to types.ts ... ?
 
 interface Props {
   asset: Asset;
@@ -48,411 +47,158 @@ const TimeBarPanel = (props: Props) => {
   const [currentData, setCurrentData] = useState<Data[]>([]);
   const [processedData, setProcessedData] = useState<ProcessedData[]>([]);
   const [timeRangeData, setTimeRangeData] = useState<Range[]>([]);
+  const { settings } = useSettings();
+  const bgColor = useColorModeValue("white", "gray.800");
+  const textColor = useColorModeValue("gray.600", "gray.300");
 
-  const xAxisData = [
-    {
-      time_begin: "2023-06-23T00:00:00.00",
-      time_end: "2023-06-23T01:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "00:00 - 01:00",
-    },
-    {
-      time_begin: "2023-06-23T01:00:00.00",
-      time_end: "2023-06-23T02:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "01:00 - 02:00",
-    },
-    {
-      time_begin: "2023-06-23T02:00:00.00",
-      time_end: "2023-06-23T03:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "02:00 - 03:00",
-    },
-    {
-      time_begin: "2023-06-23T03:00:00.00",
-      time_end: "2023-06-23T04:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "03:00 - 04:00",
-    },
-    {
-      time_begin: "2023-06-23T04:00:00.00",
-      time_end: "2023-06-23T05:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "04:00 - 05:00",
-    },
-    {
-      time_begin: "2023-06-23T05:00:00.00",
-      time_end: "2023-06-23T06:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "05:00 - 06:00",
-    },
-    {
-      time_begin: "2023-06-23T06:00:00.00",
-      time_end: "2023-06-23T07:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "06:00 - 07:00",
-    },
-    {
-      time_begin: "2023-06-23T07:00:00.00",
-      time_end: "2023-06-23T08:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "07:00 - 08:00",
-    },
-    {
-      time_begin: "2023-06-23T08:00:00.00",
-      time_end: "2023-06-23T09:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "08:00 - 09:00",
-    },
-    {
-      time_begin: "2023-06-23T09:00:00.00",
-      time_end: "2023-06-23T10:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "09:00 - 10:00",
-    },
-    {
-      time_begin: "2023-06-23T10:00:00.00",
-      time_end: "2023-06-23T11:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "10:00 - 11:00",
-    },
-    {
-      time_begin: "2023-06-23T11:00:00.00",
-      time_end: "2023-06-23T12:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "11:00 - 12:00",
-    },
-    {
-      time_begin: "2023-06-23T12:00:00.00",
-      time_end: "2023-06-23T13:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "12:00 - 13:00",
-    },
-    {
-      time_begin: "2023-06-23T13:00:00.00",
-      time_end: "2023-06-23T14:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "13:00 - 14:00",
-    },
-    {
-      time_begin: "2023-06-23T14:00:00.00",
-      time_end: "2023-06-23T15:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "14:00 - 15:00",
-    },
-    {
-      time_begin: "2023-06-23T15:00:00.00",
-      time_end: "2023-06-23T16:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "15:00 - 16:00",
-    },
-    {
-      time_begin: "2023-06-23T16:00:00.00",
-      time_end: "2023-06-23T17:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "16:00 - 17:00",
-    },
-    {
-      time_begin: "2023-06-23T17:00:00.00",
-      time_end: "2023-06-23T18:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "17:00 - 18:00",
-    },
-    {
-      time_begin: "2023-06-23T18:00:00.00",
-      time_end: "2023-06-23T19:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "18:00 - 19:00",
-    },
-    {
-      time_begin: "2023-06-23T19:00:00.00",
-      time_end: "2023-06-23T20:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "19:00 - 20:00",
-    },
-    {
-      time_begin: "2023-06-23T20:00:00.00",
-      time_end: "2023-06-23T21:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "20:00 - 21:00",
-    },
-    {
-      time_begin: "2023-06-23T21:00:00.00",
-      time_end: "2023-06-23T22:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "21:00 - 22:00",
-    },
-    {
-      time_begin: "2023-06-23T22:00:00.00",
-      time_end: "2023-06-23T23:00:00.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "22:00 - 23:00",
-    },
-    {
-      time_begin: "2023-06-23T23:00:00.00",
-      time_end: "2023-06-23T23:59:59.00",
-      status: "Up",
-      duration: 60 * 60000,
-      text: "23:00 - 24:00",
-    },
-  ];
+  // Return early if we don't have valid settings
+  if (!settings || typeof settings.day_start_hour === 'undefined' || typeof settings.day_end_hour === 'undefined') {
+    return null;
+  }
 
-  const getStatusColour = (status: string) => {
-    if (status === "Up") {
-      return colourScheme.green;
+  // Generate timeline scale data based on settings
+  const generateTimelineData = () => {
+    const data: Range[] = [];
+    for (let i = settings.day_start_hour; i < settings.day_end_hour; i++) {
+      const hour = i.toString().padStart(2, '0');
+      const nextHour = (i + 1).toString().padStart(2, '0');
+      data.push({
+        time_begin: `2023-06-23T${hour}:00:00.00`,
+        time_end: `2023-06-23T${nextHour}:00:00.00`,
+        status: "Up",
+        duration: 60 * 60000,
+        text: `${hour}:00 - ${nextHour}:00`
+      });
     }
-    if (status === "Down") {
-      return colourScheme.red;
-    }
-    if (status === "Idle") {
-      return colourScheme.orange;
-    }
-    return useColorModeValue(colourScheme.grey, colourScheme.greyDark);
+    return data;
   };
 
-  const MAX_GAP_MS = 5 * 60 * 1000;
-
-  const transformData = (data: ProcessedData[]): Range[] => {
-    const transformedData: Range[] = [];
-    let currentRange: Range | null = null;
-
-    for (let i = 0; i < data.length; i++) {
-      const point = data[i];
-      const nextPoint = i < data.length - 1 ? data[i + 1] : null;
-
-      if (currentRange === null) {
-        // Start a new range
-        currentRange = {
-          time_begin: point.time,
-          time_end: point.time,
-          status: point.status,
-          duration: 0,
-        };
-      } else if (nextPoint) {
-        // Check for gaps between measurements
-        const currentTime = new Date(point.time).getTime();
-        const nextTime = new Date(nextPoint.time).getTime();
-        const gap = nextTime - currentTime;
-
-        if (gap > MAX_GAP_MS) {
-          // End current range
-          currentRange.time_end = point.time;
-          currentRange.duration =
-            new Date(currentRange.time_end).getTime() -
-            new Date(currentRange.time_begin).getTime();
-          transformedData.push(currentRange);
-
-          // Add a "Down" range for the gap
-          transformedData.push({
-            time_begin: point.time,
-            time_end: nextPoint.time,
-            status: "Down",
-            duration: gap,
-          });
-
-          // Start a new range with the next point
-          currentRange = {
-            time_begin: nextPoint.time,
-            time_end: nextPoint.time,
-            status: nextPoint.status,
-            duration: 0,
-          };
-          continue;
-        }
-
-        if (point.status === currentRange.status) {
-          // Expand the current range
-          currentRange.time_end = point.time;
-        } else {
-          // End the current range and start a new one
-          currentRange.duration =
-            new Date(currentRange.time_end).getTime() -
-            new Date(currentRange.time_begin).getTime();
-          transformedData.push(currentRange);
-          currentRange = {
-            time_begin: point.time,
-            time_end: point.time,
-            status: point.status,
-            duration: 0,
-          };
-        }
-      }
-    }
-
-    // Do the last one
-    if (currentRange !== null) {
-      currentRange.duration =
-        new Date(currentRange.time_end).getTime() -
-        new Date(currentRange.time_begin).getTime();
-      transformedData.push(currentRange);
-    }
-
-    const transformedDataComplete = transformedData.map((point) => {
-      if (point.duration === 0) {
-        return {
-          ...point,
-          duration: 60000,
-        };
-      } else {
-        return point;
-      }
-    });
-
-    return transformedDataComplete;
-  };
-
-  const fetchData = async () => {
-    try {
-      const currentDate = new Date();
-      const year = currentDate.getFullYear();
-      const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-      const day = String(currentDate.getDate()).padStart(2, "0");
-
-      // TODO: Test behaviour with BST ...
-      const startTime = `${year}-${month}-${day}T00:00:00.00Z`;
-      const endTime = `${year}-${month}-${day}T23:59:59.00Z`;
-
-      // TODO: Use the retrieveData function from functions.ts
-      const response = await fetch(
-        getApiUrl(
-          `data/period?asset_id=${props.asset.id}&time_from=${startTime}&time_to=${endTime}`
-        ),
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data: Data[] = await response.json();
-
-        setCurrentData(data);
-        processData(data);
-      } else {
-        console.error("Error:", response.status);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  };
-
-  const processData = (data: Data[]) => {
-    const processedArray: ProcessedData[] = data.map((item) => {
-      let status: "Up" | "Down" | "Idle";
-
-      if ((item.current as number) < currentBounds.off) {
-        status = "Down";
-      } else if (
-        (item.current as number) >= currentBounds.off &&
-        (item.current as number) <= currentBounds.on
-      ) {
-        status = "Idle";
-      } else {
-        status = "Up";
-      }
-
-      return {
-        time: item.time,
-        status,
-      };
-    });
-
-    setProcessedData(processedArray);
-
-    setTimeRangeData(transformData(processedArray));
-  };
+  const xAxisData = generateTimelineData();
 
   useEffect(() => {
-    fetchData();
+    const fetchData = async () => {
+      try {
+        // Get today's date in YYYY-MM-DD format
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = (today.getMonth() + 1).toString().padStart(2, "0");
+        const day = today.getDate().toString().padStart(2, "0");
+        const dateStr = `${year}-${month}-${day}`;
 
-    // TODO: Allow users to set the refresh rate
-    const intervalFetch = setInterval(fetchData, 5000);
+        // Construct start and end times using settings
+        const startHour = settings.day_start_hour.toString().padStart(2, "0");
+        const endHour = settings.day_end_hour.toString().padStart(2, "0");
+        const startTime = `${dateStr}T${startHour}:00:00.00Z`;
+        const endTime = `${dateStr}T${endHour}:00:00.00Z`;
 
-    return () => {
-      clearInterval(intervalFetch);
+        const response = await fetch(
+          getApiUrl(
+            `/get-data-over-time-period?topic=${encodeURIComponent(props.asset.topic)}&start_time=${startTime}&end_time=${endTime}`
+          )
+        );
+
+        if (!response.ok) {
+          throw new Error(`Network response was not ok: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setCurrentData(data);
+
+        // Process the data into status points
+        const processedPoints: ProcessedData[] = data.map((point: Data) => ({
+          time: point.time,
+          status:
+            typeof point.current === 'number' && point.current < currentBounds.off
+              ? "Down"
+              : typeof point.current === 'number' && point.current >= currentBounds.on
+              ? "Up"
+              : "Idle",
+        }));
+
+        setProcessedData(processedPoints);
+
+        // Process into time ranges
+        const ranges: Range[] = [];
+        let currentRange: Range | null = null;
+
+        for (const point of processedPoints) {
+          const pointTime = new Date(point.time);
+          const hour = pointTime.getHours();
+          
+          // Skip points outside the configured day hours
+          if (hour < settings.day_start_hour || hour >= settings.day_end_hour) {
+            continue;
+          }
+
+          if (!currentRange) {
+            currentRange = {
+              time_begin: point.time,
+              time_end: point.time,
+              status: point.status,
+              duration: 0,
+              text: `${new Date(point.time).toLocaleTimeString()} - Present`
+            };
+          } else if (currentRange.status !== point.status) {
+            currentRange.time_end = point.time;
+            currentRange.duration = new Date(point.time).getTime() - new Date(currentRange.time_begin).getTime();
+            currentRange.text = `${new Date(currentRange.time_begin).toLocaleTimeString()} - ${new Date(point.time).toLocaleTimeString()}`;
+            ranges.push(currentRange);
+            currentRange = {
+              time_begin: point.time,
+              time_end: point.time,
+              status: point.status,
+              duration: 0,
+              text: `${new Date(point.time).toLocaleTimeString()} - Present`
+            };
+          }
+        }
+
+        if (currentRange && processedPoints.length > 0) {
+          currentRange.time_end = processedPoints[processedPoints.length - 1].time;
+          currentRange.duration = new Date(currentRange.time_end).getTime() - new Date(currentRange.time_begin).getTime();
+          currentRange.text = `${new Date(currentRange.time_begin).toLocaleTimeString()} - ${new Date(currentRange.time_end).toLocaleTimeString()}`;
+          ranges.push(currentRange);
+        }
+
+        setTimeRangeData(ranges);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     };
-  }, []);
+
+    fetchData();
+    const interval = setInterval(fetchData, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, [props.asset.topic, settings]);
 
   return (
-    <Box
+    <Grid
+      templateColumns="200px 1fr"
+      gap={4}
+      alignItems="center"
+      bg={bgColor}
       p={4}
-      bg={useColorModeValue("white", "gray.800")}
       borderRadius="md"
-      border="1px"
-      borderColor={useColorModeValue("gray.200", "gray.600")}
-      _hover={{
-        borderColor: useColorModeValue("gray.300", "gray.500"),
-        boxShadow: useColorModeValue("sm", "dark-lg"),
-      }}
-      transition="all 0.2s"
+      boxShadow="sm"
     >
-      <Grid templateColumns="250px 1fr" gap={4} alignItems="center">
-        <Box>
-          <Text
-            fontWeight="medium"
-            fontSize="lg"
-            mb={1}
-            color={useColorModeValue("gray.800", "white")}
-          >
-            {props.asset.manufacturer}
-          </Text>
-          <Text color={useColorModeValue("gray.600", "gray.300")} fontSize="sm">
-            {props.asset.model}
-          </Text>
-          <Text
-            color={useColorModeValue("gray.500", "gray.400")}
-            fontSize="xs"
-            fontFamily="mono"
-            mt={1}
-          >
-            {props.asset.topic}
-          </Text>
-        </Box>
-
-        <Box>
-          <DayTimelineScale
-            startHour={props.startHour}
-            endHour={props.endHour}
-            xAxisData={xAxisData}
-          />
-          <Box position="relative" mt={1}>
-            <DayTimeline
-              activities={timeRangeData}
-              startHour={props.startHour}
-              endHour={props.endHour}
-              assetId={props.asset.id}
-              assetName={`${props.asset.manufacturer} ${props.asset.model}`}
-              onDowntimeClick={props.onDowntimeClick}
-            />
-          </Box>
-        </Box>
-      </Grid>
-    </Box>
+      <Box>
+        <Text fontWeight="medium">{`${props.asset.manufacturer} ${props.asset.model}`}</Text>
+        <Text fontSize="sm" color={textColor}>
+          {props.asset.topic}
+        </Text>
+      </Box>
+      <Box position="relative">
+        <DayTimelineScale xAxisData={xAxisData} startHour={props.startHour} endHour={props.endHour} />
+        <DayTimeline
+          activities={timeRangeData}
+          startHour={props.startHour}
+          endHour={props.endHour}
+          assetId={props.asset.id}
+          assetName={`${props.asset.manufacturer} ${props.asset.model}`}
+          onDowntimeClick={props.onDowntimeClick}
+        />
+      </Box>
+    </Grid>
   );
 };
 

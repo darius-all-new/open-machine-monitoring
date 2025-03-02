@@ -18,14 +18,7 @@ along with OpenMachineMonitoring. If not, see <https://www.gnu.org/licenses/>
 */
 
 import { Box, Text, useColorModeValue } from "@chakra-ui/react";
-
-interface Range {
-  time_begin: string;
-  time_end: string;
-  status: string;
-  duration: number;
-  text: string;
-}
+import { Range } from "../types";
 
 interface Props {
   startHour: number;
@@ -34,6 +27,11 @@ interface Props {
 }
 
 const DayTimelineScale = (props: Props) => {
+  // Move all hook calls to the top
+  const bgColor = useColorModeValue("gray.100", "gray.700");
+  const borderColor = useColorModeValue("gray.200", "gray.600");
+  const textColor = useColorModeValue("gray.600", "gray.400");
+
   const regionStartTime = props.startHour * 60 * 60 * 1000;
   const regionEndTime = props.endHour * 60 * 60 * 1000;
   const dayDuration = regionEndTime - regionStartTime;
@@ -84,7 +82,7 @@ const DayTimelineScale = (props: Props) => {
       borderRadius="md"
     >
       {/* Time markers */}
-      {props.xAxisData.map((activity, index) => {
+      {props.xAxisData?.map((activity, index) => {
         const leftPosition = calculateBlockLeft(activity);
         const width = calculateBlockWidth(activity);
         const leftPercentage = parseFloat(leftPosition);
@@ -103,11 +101,11 @@ const DayTimelineScale = (props: Props) => {
             left={leftPosition}
             width={width}
             borderLeft={index > 0 ? "1px" : "none"}
-            borderColor={useColorModeValue("gray.300", "gray.600")}
+            borderColor={borderColor}
           >
             <Text
               fontSize="xs"
-              color={useColorModeValue("gray.600", "gray.400")}
+              color={textColor}
               position="absolute"
               left={1}
               top={0}

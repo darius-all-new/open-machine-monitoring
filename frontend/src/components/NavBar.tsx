@@ -307,6 +307,44 @@ const NavBar = () => {
                 <option value="Sunday">Sunday</option>
               </Select>
             </FormControl>
+
+            <FormControl display="flex" alignItems="center" mb="4">
+              <FormLabel htmlFor="day_start_hour" flex="1">
+                Day Start Hour (0-23)
+              </FormLabel>
+              <Select
+                id="day_start_hour"
+                name="day_start_hour"
+                value={updatedSettings.day_start_hour}
+                onChange={handleInputChange}
+                width="100px"
+              >
+                {Array.from({ length: 24 }, (_, i) => (
+                  <option key={i} value={i}>
+                    {i.toString().padStart(2, '0')}:00
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
+
+            <FormControl display="flex" alignItems="center" mb="4">
+              <FormLabel htmlFor="day_end_hour" flex="1">
+                Day End Hour (1-24)
+              </FormLabel>
+              <Select
+                id="day_end_hour"
+                name="day_end_hour"
+                value={updatedSettings.day_end_hour}
+                onChange={handleInputChange}
+                width="100px"
+              >
+                {Array.from({ length: 24 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {(i + 1).toString().padStart(2, '0')}:00
+                  </option>
+                ))}
+              </Select>
+            </FormControl>
           </ModalBody>
           <ModalFooter>
             <Button variant="outline" mr={3} onClick={handleCloseModal}>

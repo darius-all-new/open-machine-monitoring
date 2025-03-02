@@ -29,3 +29,5 @@ dist-ssr
 *.sw?
 
 omm_env
+
+config.ts

@@ -54,7 +54,16 @@ def calculate_status(current):
 def calculate_duration(data):
     '''
     Return a dictionary containing the amount of time the machine was on/idle/off for the given data.
+    Only considers measurements within the configured day hours.
     '''
+    # Get the settings to determine day start/end hours
+    db = SessionLocal()
+    try:
+        settings = crud.get_settings(db, 1)  # Get default settings
+        day_start_hour = settings.day_start_hour
+        day_end_hour = settings.day_end_hour
+    finally:
+        db.close()
 
     total_duration = datetime.timedelta()
     off_duration = datetime.timedelta()
@@ -64,6 +73,12 @@ def calculate_duration(data):
     for i in range(1, len(data)):
         current_time = datetime.datetime.strptime(data[i]["time"], "%Y-%m-%dT%H:%M:%S.%f%z")
         prev_time = datetime.datetime.strptime(data[i-1]["time"], "%Y-%m-%dT%H:%M:%S.%f%z")
+        
+        # Skip if either time is outside the configured day hours
+        if (prev_time.hour < day_start_hour or prev_time.hour >= day_end_hour or 
+            current_time.hour < day_start_hour or current_time.hour >= day_end_hour):
+            continue
+            
         duration = current_time - prev_time
         total_duration += duration
 
@@ -82,7 +97,6 @@ def calculate_duration(data):
     print(f"{off_duration.total_seconds()}, {idle_duration.total_seconds()}, {on_duration.total_seconds()}")
 
     return {
-        # "total_duration": total_duration.total_seconds(),
         "time_off": off_duration.total_seconds(),
         "time_idle": idle_duration.total_seconds(),
         "time_on": on_duration.total_seconds()

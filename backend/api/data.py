@@ -39,3 +39,11 @@ def asset_data_period(asset_id: int, time_from: str, time_to: str, db: Session=D
     data = get_data_over_time_period(topic_of_interest, time_from, time_to)
 
     return data
+
+@router.get("/get-data-over-time-period", tags=["Data"], response_model=List[schemas.Data])
+def get_data_by_topic_and_time(topic: str, start_time: str, end_time: str):
+    '''
+    Retrieves data for a specific topic over a given time period
+    '''
+    data = get_data_over_time_period(topic, start_time, end_time)
+    return data

@@ -79,3 +79,5 @@ class Settings(Base):
     id = Column(Integer, primary_key=True, index=True)
     day_duration = Column(Float)
     week_start = Column(String)
+    day_start_hour = Column(Integer, default=0)
+    day_end_hour = Column(Integer, default=24)

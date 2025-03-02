@@ -64,15 +64,41 @@ def get_formatted_timestamps(time_range):
     print(TIME_FORMAT)
     
     current_time = datetime.now()
+    
+    # Get the settings to determine day start/end hours
+    from sqlalchemy.orm import Session
+    from database import SessionLocal
+    import crud
+    
+    db = SessionLocal()
+    try:
+        settings = crud.get_settings(db, 1)  # Get default settings
+        day_start_hour = settings.day_start_hour
+        day_end_hour = settings.day_end_hour
+    finally:
+        db.close()
+    
+    # Adjust current time if it's outside the day hours
+    current_hour = current_time.hour
+    if current_hour < day_start_hour or current_hour >= day_end_hour:
+        # If we're before start hour, use previous day's end hour
+        if current_hour < day_start_hour:
+            current_time = current_time.replace(hour=day_end_hour, minute=0, second=0, microsecond=0) - timedelta(days=1)
+        # If we're after end hour, use current day's end hour
+        else:
+            current_time = current_time.replace(hour=day_end_hour, minute=0, second=0, microsecond=0)
+    
     current_time_formatted = current_time.strftime(TIME_FORMAT)
 
     if time_range == "day":
-        start_time = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
+        start_time = current_time.replace(hour=day_start_hour, minute=0, second=0, microsecond=0)
+        if current_time.hour < day_start_hour:
+            start_time = start_time - timedelta(days=1)
     elif time_range == "week":
         start_time = current_time - timedelta(days=current_time.weekday())
-        start_time = start_time.replace(hour=0, minute=0, second=0, microsecond=0)
+        start_time = start_time.replace(hour=day_start_hour, minute=0, second=0, microsecond=0)
     elif time_range == "month":
-        start_time = current_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        start_time = current_time.replace(day=1, hour=day_start_hour, minute=0, second=0, microsecond=0)
     else:
         raise ValueError("Invalid time range. Please choose 'day', 'week', or 'month'.")
 

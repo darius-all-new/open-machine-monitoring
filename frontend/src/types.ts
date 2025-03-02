@@ -67,6 +67,7 @@ Data point with a timestamp and several other attributes.
 export interface Data {
   [key: string]: number | string | boolean;
   time: string;
+  current: number;
 }
 
 /*
@@ -104,12 +105,20 @@ export interface BasicFunctionReturn {
 }
 
 /*
-Holds information from settings
+Backend settings type that matches the API response
 */
-export interface Settings {
+export interface BackendSettings {
   id: number;
   day_duration: number;
   week_start: string;
+  day_start_hour: number;
+  day_end_hour: number;
+}
+
+/*
+Frontend settings that includes UI-specific fields
+*/
+export interface Settings extends BackendSettings {
   colorMode: "light" | "dark";
 }
 
@@ -123,6 +132,7 @@ export interface Range {
   time_end: string;
   status: string;
   duration: number;
+  text: string;  // Required text property for timeline labels
 }
 
 /*

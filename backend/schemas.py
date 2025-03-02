@@ -115,10 +115,14 @@ class Settings(BaseModel):
     id: int
     day_duration: float
     week_start: str
+    day_start_hour: int = Field(default=0, ge=0, le=23)
+    day_end_hour: int = Field(default=24, ge=1, le=24)
 
 class SettingsUpdate(BaseModel):
     day_duration: Optional[float] = Field(None)
     week_start: Optional[str] = Field(None)
+    day_start_hour: Optional[int] = Field(None, ge=0, le=23)
+    day_end_hour: Optional[int] = Field(None, ge=1, le=24)
 
 '''
 USERS

@@ -18,14 +18,16 @@ along with OpenMachineMonitoring. If not, see <https://www.gnu.org/licenses/>
 */
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { Settings } from "./types";
-import { changeSettings, fetchSettings } from "./functions";
+import { Settings, BackendSettings } from "./types";
+import { fetchSettings, changeSettings } from "./functions";
 
 const initialSettings: Settings = {
   id: 1,
   day_duration: 0,
   week_start: "Monday",
-  colorMode: 'light'
+  colorMode: 'light',
+  day_start_hour: 8,    // Default to 8 AM
+  day_end_hour: 20      // Default to 8 PM
 };
 
 type SettingsContextProps = {
@@ -49,18 +51,40 @@ export const SettingsProvider: React.FC<SettingsContextProps> = ({
     const getSettings = async () => {
       try {
         const response = await fetchSettings();
-        setSettings(response);
+        if (response) {
+          // Merge backend settings with frontend colorMode
+          const frontendSettings: Settings = {
+            ...response,
+            colorMode: settings.colorMode // Preserve existing colorMode
+          };
+          setSettings(frontendSettings);
+        }
       } catch (error) {
-        console.error("Error: ", error);
+        console.error("Error fetching settings:", error);
       }
     };
     getSettings();
   }, []);
 
-  // Update the settings with the new values
-  const updateSettings = (newSettings: Settings) => {
-    setSettings(newSettings);
-    changeSettings(newSettings);
+  const updateSettings = async (newSettings: Settings) => {
+    try {
+      // Extract backend-only settings
+      const backendSettings: BackendSettings = {
+        id: newSettings.id,
+        day_duration: newSettings.day_duration,
+        week_start: newSettings.week_start,
+        day_start_hour: newSettings.day_start_hour,
+        day_end_hour: newSettings.day_end_hour
+      };
+      
+      // Update backend
+      await changeSettings(backendSettings);
+      
+      // Update frontend state
+      setSettings(newSettings);
+    } catch (error) {
+      console.error("Error updating settings:", error);
+    }
   };
 
   return (

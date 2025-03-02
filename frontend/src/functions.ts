@@ -22,6 +22,7 @@ import {
   BasicFunctionReturn,
   Data,
   Settings,
+  BackendSettings,
   UptimeDataStruct,
   UsageRecord,
   Downtime,
@@ -471,7 +472,7 @@ export const fetchSettings = async () => {
 /*
 Make changes to settings
 */
-export const changeSettings = async (updatedSettings: Settings) => {
+export const changeSettings = async (updatedSettings: BackendSettings) => {
   try {
     // TODO: hardcoded settings_id
     const response = await fetch(getApiUrl("/update-settings?settings_id=1"), {

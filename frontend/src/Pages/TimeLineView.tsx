@@ -26,6 +26,7 @@ import {
   updateAssetStatuses,
   findDowntimeForTimeRange,
 } from "../functions";
+import { useSettings } from "../SettingsContext";
 import {
   Box,
   Button,
@@ -53,9 +54,16 @@ import DowntimeDetailsModal from "../components/DowntimeDetailsModal";
 
 const TimeLineView = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [startHour, setStartHour] = useState(0);
-  const [endHour, setEndHour] = useState(24);
+  const { settings } = useSettings();
+  const [startHour, setStartHour] = useState(settings.day_start_hour);
+  const [endHour, setEndHour] = useState(settings.day_end_hour);
   const today = new Date();
+
+  // Update timeline bounds when settings change
+  useEffect(() => {
+    setStartHour(settings.day_start_hour);
+    setEndHour(settings.day_end_hour);
+  }, [settings]);
 
   // State for downtime modal
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -81,8 +89,8 @@ const TimeLineView = () => {
     };
   }, []);
 
-  const minHour = 0;
-  const maxHour = 24;
+  const minHour = settings.day_start_hour;
+  const maxHour = settings.day_end_hour;
 
   const clamp = (num: number, min: number, max: number) =>
     Math.min(Math.max(num, min), max);
@@ -110,8 +118,8 @@ const TimeLineView = () => {
   };
 
   const resetView = () => {
-    setStartHour(0);
-    setEndHour(24);
+    setStartHour(settings.day_start_hour);
+    setEndHour(settings.day_end_hour);
   };
 
   const handleDowntimeClick = async (
