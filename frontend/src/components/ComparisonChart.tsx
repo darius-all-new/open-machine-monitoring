@@ -177,32 +177,37 @@ const ComparisonChart = () => {
   useEffect(() => {
     if (usageRecords.length > 0 && selectedAssetIds.length > 0) {
       const dateMap = new Map<string, ComparisonDataPoint>();
-      const uniqueDates = [
-        ...new Set(usageRecords.map((record) => record.date)),
-      ];
 
-      // Initialize dates
-      uniqueDates.forEach((date) => dateMap.set(date, { date }));
+      // Get all unique dates and sort them
+      const uniqueDates = [...new Set(usageRecords.map(record => record.date))].sort();
 
-      // Add data for each asset
-      usageRecords.forEach((record) => {
-        if (selectedAssetIds.includes(record.asset_id)) {
-          const asset = assets.find((a) => a.id === record.asset_id);
-          if (asset) {
-            const dataPoint = dateMap.get(record.date) || { date: record.date };
-            const assetLabel = `${asset.manufacturer} ${asset.model}`;
-            dataPoint[assetLabel] = calculateSingleUptime(record);
-            dateMap.set(record.date, dataPoint);
-          }
+      // Initialize all dates with empty data points
+      uniqueDates.forEach(date => {
+        dateMap.set(date, { date });
+      });
+
+      // Process records for each asset
+      selectedAssetIds.forEach(assetId => {
+        const asset = assets.find(a => a.id === assetId);
+        if (asset) {
+          const assetLabel = `${asset.manufacturer} ${asset.model}`;
+          const assetRecords = usageRecords.filter(record => record.asset_id === assetId);
+          
+          // Add data for each date
+          assetRecords.forEach(record => {
+            const existingDataPoint = dateMap.get(record.date) || { date: record.date };
+            existingDataPoint[assetLabel] = calculateSingleUptime(record);
+            dateMap.set(record.date, existingDataPoint);
+          });
         }
       });
 
-      // Sort by date
-      setComparisonData(
-        Array.from(dateMap.values()).sort(
-          (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-        )
+      // Convert to array and sort by date
+      const sortedData = Array.from(dateMap.values()).sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
       );
+
+      setComparisonData(sortedData);
     }
   }, [usageRecords, selectedAssetIds, assets]);
 
