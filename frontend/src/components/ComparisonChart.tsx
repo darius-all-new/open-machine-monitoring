@@ -178,8 +178,11 @@ const ComparisonChart = () => {
     if (usageRecords.length > 0 && selectedAssetIds.length > 0) {
       const dateMap = new Map<string, ComparisonDataPoint>();
 
+      // Helper to get just the date part
+      const getDateOnly = (dateStr: string) => dateStr.split('T')[0];
+
       // Get all unique dates and sort them
-      const uniqueDates = [...new Set(usageRecords.map(record => record.date))].sort();
+      const uniqueDates = [...new Set(usageRecords.map(record => getDateOnly(record.date)))].sort();
 
       // Initialize all dates with empty data points
       uniqueDates.forEach(date => {
@@ -195,9 +198,10 @@ const ComparisonChart = () => {
           
           // Add data for each date
           assetRecords.forEach(record => {
-            const existingDataPoint = dateMap.get(record.date) || { date: record.date };
+            const dateOnly = getDateOnly(record.date);
+            const existingDataPoint = dateMap.get(dateOnly) || { date: dateOnly };
             existingDataPoint[assetLabel] = calculateSingleUptime(record);
-            dateMap.set(record.date, existingDataPoint);
+            dateMap.set(dateOnly, existingDataPoint);
           });
         }
       });
@@ -340,7 +344,10 @@ const ComparisonChart = () => {
           {selectedAssetIds.length > 0 ? (
             <Box h="500px">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={comparisonData}>
+                <LineChart 
+                  data={comparisonData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
                   <CartesianGrid
                     strokeDasharray="3 3"
                     stroke={gridColor}
